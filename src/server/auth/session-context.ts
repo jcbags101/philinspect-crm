@@ -1,3 +1,5 @@
+import { cache } from "react";
+
 import { auth } from "@/lib/auth/server";
 import { resolveWorkspaceMember } from "@/server/services/workspace-service";
 import type { AppRole } from "./permissions";
@@ -12,7 +14,7 @@ export interface SessionContext {
   role: AppRole;
 }
 
-export async function getSessionContext(): Promise<SessionContext | null> {
+async function resolveSessionContext(): Promise<SessionContext | null> {
   const { data } = await auth.getSession();
   if (!data?.user) return null;
 
@@ -37,6 +39,8 @@ export async function getSessionContext(): Promise<SessionContext | null> {
     role: member.role,
   };
 }
+
+export const getSessionContext = cache(resolveSessionContext);
 
 export async function requireSessionContext(): Promise<SessionContext> {
   const context = await getSessionContext();

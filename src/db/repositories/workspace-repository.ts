@@ -88,7 +88,9 @@ export async function createOrLinkWorkspaceMember(
     .limit(1);
 
   let userId: string;
-  if (existingEmail && !existingEmail.authUserId) {
+  if (existingEmail?.authUserId === input.authUserId) {
+    userId = existingEmail.id;
+  } else if (existingEmail && !existingEmail.authUserId) {
     const [linked] = await db
       .update(users)
       .set({
@@ -101,7 +103,7 @@ export async function createOrLinkWorkspaceMember(
       .returning({ id: users.id });
     if (!linked) throw new Error("Existing user could not be linked.");
     userId = linked.id;
-  } else {
+  } else if (!existingEmail) {
     const [created] = await db
       .insert(users)
       .values({
@@ -113,6 +115,8 @@ export async function createOrLinkWorkspaceMember(
       .returning({ id: users.id });
     if (!created) throw new Error("Application user could not be created.");
     userId = created.id;
+  } else {
+    throw new Error("This email is already linked to another application identity.");
   }
 
   const [role] = await db.select({ id: roles.id }).from(roles).where(eq(roles.name, input.role)).limit(1);
