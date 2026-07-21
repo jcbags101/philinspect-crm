@@ -11,15 +11,21 @@ type Database = ReturnType<typeof drizzle<typeof schema>>;
 let pool: Pool | null = null;
 let database: Database | null = null;
 
+function getRuntimeDatabaseUrl(): string {
+  const connectionString = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error(
+      "POSTGRES_URL or DATABASE_URL is required to connect to Neon Postgres.",
+    );
+  }
+
+  return connectionString;
+}
+
 export function getDb(): Database {
   if (database) return database;
 
-  const connectionString = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("POSTGRES_URL or DATABASE_URL is required to connect to Neon Postgres.");
-  }
-
-  pool = new Pool({ connectionString, max: 5 });
+  pool = new Pool({ connectionString: getRuntimeDatabaseUrl(), max: 5 });
   attachDatabasePool(pool);
   database = drizzle({ client: pool, schema });
 

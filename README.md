@@ -1,4 +1,4 @@
-# Symph CRM POC
+# PhilInspect CRM POC
 
 A realistic CRM proof of concept built from a read-only product audit. The app uses entirely fictional demo data and does not contain source-system screenshots, credentials, or customer records.
 
@@ -17,6 +17,7 @@ A realistic CRM proof of concept built from a read-only product audit. The app u
 - Next.js 16 App Router, React 19, TypeScript, and Tailwind CSS
 - shadcn/Base UI components
 - Drizzle ORM with Neon Postgres
+- Neon Auth for staging identity and sessions
 - Vercel Functions pool lifecycle support
 - Vitest, ESLint, and production build verification
 
@@ -30,7 +31,20 @@ npm run db:seed
 npm run dev
 ```
 
-Use a pooled Neon URL for `POSTGRES_URL` and an unpooled URL for `DATABASE_URL_UNPOOLED`.
+Use the PhilInspectCRM `staging` branch. Set a pooled Neon URL for
+`POSTGRES_URL`, an unpooled URL for `DATABASE_URL_UNPOOLED`, the branch's
+`NEON_AUTH_BASE_URL`, and a private `NEON_AUTH_COOKIE_SECRET` of at least 32
+characters. Never point local or staging environments at the Neon primary
+branch.
+
+## Delivery model
+
+- The current Vercel project is staging only.
+- GitHub `staging` is the only deployed branch during the POC.
+- `main`, the Neon primary branch, and a separate production Vercel project are
+  reserved until an explicit go-live approval.
+- The RelayDesk inbox is a persistent mock and never contacts a real messaging
+  provider.
 
 ## Commands
 
