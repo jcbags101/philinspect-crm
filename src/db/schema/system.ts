@@ -8,7 +8,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { users } from "./identity";
+import { users, workspaces } from "./identity";
 
 export const auditActionEnum = pgEnum("audit_action", [
   "created",
@@ -39,6 +39,7 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
     actorId: uuid("actor_id").references(() => users.id),
     entityType: varchar("entity_type", { length: 80 }).notNull(),
     entityId: uuid("entity_id"),
@@ -53,8 +54,8 @@ export const auditLogs = pgTable(
   },
   (table) => [
     index("audit_logs_created_idx").on(table.createdAt),
+    index("audit_logs_workspace_idx").on(table.workspaceId, table.createdAt),
     index("audit_logs_entity_idx").on(table.entityType, table.entityId),
     index("audit_logs_actor_idx").on(table.actorId),
   ],
 );
-

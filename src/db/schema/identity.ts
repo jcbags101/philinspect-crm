@@ -1,4 +1,5 @@
 import {
+  index,
   pgEnum,
   pgTable,
   primaryKey,
@@ -14,10 +15,26 @@ export const roleNameEnum = pgEnum("role_name", [
   "admin",
 ]);
 
+export const workspaces = pgTable(
+  "workspaces",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    neonAuthOrganizationId: varchar("neon_auth_organization_id", { length: 255 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex("workspaces_neon_auth_org_idx").on(table.neonAuthOrganizationId),
+  ],
+);
+
 export const users = pgTable(
   "users",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    authUserId: varchar("auth_user_id", { length: 255 }),
+    workspaceId: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 160 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
     avatarUrl: varchar("avatar_url", { length: 500 }),
@@ -28,7 +45,11 @@ export const users = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [uniqueIndex("users_email_idx").on(table.email)],
+  (table) => [
+    uniqueIndex("users_email_idx").on(table.email),
+    uniqueIndex("users_auth_user_idx").on(table.authUserId),
+    index("users_workspace_idx").on(table.workspaceId),
+  ],
 );
 
 export const roles = pgTable(
@@ -64,4 +85,3 @@ export const demoSessions = pgTable("demo_sessions", {
     .defaultNow()
     .notNull(),
 });
-

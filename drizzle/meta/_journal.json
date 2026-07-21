@@ -8,6 +8,13 @@
       "when": 1784556878182,
       "tag": "0000_colossal_whizzer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784642443717,
+      "tag": "0001_stiff_dark_beast",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import {
   ArchiveRestore,
@@ -17,6 +17,7 @@ import {
   Handshake,
   Inbox,
   LayoutDashboard,
+  LogOut,
   Menu,
   MessageSquareText,
   Moon,
@@ -32,6 +33,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { authClient } from "@/lib/auth/client";
 
 const nav = [
   { href: "/chat", label: "Chat", icon: MessageSquareText },
@@ -58,8 +60,8 @@ function Sidebar({ collapsed, close }: { collapsed: boolean; close?: () => void 
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
       <div className={cn("flex h-16 items-center border-b border-sidebar-border", collapsed ? "justify-center px-2" : "px-4")}>
         <Link href="/" className="flex items-center gap-3" onClick={close}>
-          <span className="grid size-8 place-items-center rounded-lg bg-primary font-semibold text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,.25)]">S</span>
-          {!collapsed && <span className="font-semibold tracking-tight">Symph CRM</span>}
+          <span className="grid size-8 place-items-center rounded-lg bg-primary font-semibold text-primary-foreground shadow-[0_0_20px_rgba(37,99,235,.25)]">P</span>
+          {!collapsed && <span className="font-semibold tracking-tight">PhilInspect CRM</span>}
         </Link>
       </div>
       <nav className="crm-scrollbar flex-1 space-y-1 overflow-y-auto p-2" aria-label="Main navigation">
@@ -92,16 +94,43 @@ function Sidebar({ collapsed, close }: { collapsed: boolean; close?: () => void 
   );
 }
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  currentUser: { name: string; role: string } | null;
+}
+
+export function AppShell({ children, currentUser }: AppShellProps) {
+  const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [dark, setDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [persona, setPersona] = useState("Account Manager");
+  const initials = currentUser?.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "PI";
 
   function toggleTheme() {
     const next = !dark;
     setDark(next);
     document.documentElement.classList.toggle("dark", next);
+  }
+
+  async function signOut() {
+    await authClient.signOut();
+    router.replace("/auth/sign-in");
+    router.refresh();
+  }
+
+  if (pathname.startsWith("/auth/")) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[radial-gradient(circle_at_top,rgba(37,99,235,.16),transparent_38%)] p-4">
+        {children}
+      </main>
+    );
   }
 
   return (
@@ -129,7 +158,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {["Account Manager", "Sales", "Admin"].map((label) => <DropdownMenuItem key={label} onClick={() => setPersona(label)}>{label}</DropdownMenuItem>)}
               </DropdownMenuContent>
             </DropdownMenu>
-            <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-xs font-semibold">AS</div>
+            <Button variant="ghost" size="icon" onClick={signOut} aria-label="Sign out" title="Sign out"><LogOut /></Button>
+            <div className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-xs font-semibold" title={currentUser ? `${currentUser.name} · ${currentUser.role}` : undefined}>{initials}</div>
           </div>
         </header>
         <main className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">{children}</main>
