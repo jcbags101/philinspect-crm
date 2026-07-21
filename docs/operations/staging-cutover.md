@@ -1,7 +1,7 @@
 # PhilInspectCRM Staging Cutover
 
 Date: 2026-07-21  
-Status: Baseline captured; cutover not started
+Status: PhilInspectCRM staging branch initialized; application cutover pending
 
 ## Guardrails
 
@@ -25,8 +25,11 @@ Status: Baseline captured; cutover not started
 | Older local Neon project | `holy-pond-71585430` | Retain; do not delete |
 | Target Neon project | `curly-block-65583676` | `PhilInspectCRM` |
 | Target Neon primary branch | `br-broad-lake-azseiabj` | Reserved for future production |
+| Target Neon staging branch | `br-purple-base-azltwlq4` | Application migrations and fictional data only |
 
 At baseline, PhilInspectCRM contains the `neon_auth` schema and no CRM application tables. Its primary branch is ready and must remain unchanged during the staging implementation.
+
+The isolated `staging` child branch was created from the primary branch and initialized with the existing migration and deterministic fictional seed. Verified staging counts are 12 users, 400 leads, 148 brands, 163 deals, 30 conversations, 90 messages, and 1,855 audit logs. A post-migration inspection confirmed the primary branch still contains only Neon Auth tables.
 
 ## Pre-cutover verification
 
