@@ -1,7 +1,7 @@
 # PhilInspectCRM Staging Cutover
 
 Date: 2026-07-21  
-Status: PhilInspectCRM staging branch initialized; application cutover pending
+Status: Local application implementation complete; GitHub authentication blocks remote cutover
 
 ## Guardrails
 
@@ -17,7 +17,7 @@ Status: PhilInspectCRM staging branch initialized; application cutover pending
 
 | Resource | Safe identifier | Baseline |
 |---|---|---|
-| Local Git branch | `agent/bootstrap-crm-poc` | Commit `3818f05` |
+| Local Git branch | `agent/bootstrap-crm-poc` | Verified implementation commit `32052ce` |
 | Vercel team | `team_DHwCmuGXBLaeVKKqntMbikjH` | Existing team retained |
 | Vercel project | `prj_TA6Km0gpwns0e44xhubAM3ARNG1a` | `crm-symph-poc` |
 | Ready Vercel deployment | `dpl_DoAqbBq1Knh9FR2wiFkkzHPRMdbV` | Ready deployment retained |
@@ -29,7 +29,7 @@ Status: PhilInspectCRM staging branch initialized; application cutover pending
 
 At baseline, PhilInspectCRM contains the `neon_auth` schema and no CRM application tables. Its primary branch is ready and must remain unchanged during the staging implementation.
 
-The isolated `staging` child branch was created from the primary branch and initialized with the existing migration and deterministic fictional seed. Verified staging counts are 12 users, 400 leads, 148 brands, 163 deals, 30 conversations, 90 messages, and 1,855 audit logs. A post-migration inspection confirmed the primary branch still contains only Neon Auth tables.
+The isolated `staging` child branch was created from the primary branch and initialized with the reviewed migrations and deterministic fictional seed. The final RelayDesk fixture contains 4 messaging accounts, 24 conversations, 168 chronological messages, 68 delivery attempts, 4 tags, 6 unread conversations, and 5 unassigned conversations. Two seed passes completed successfully with the same identifiers and counts. A post-migration inspection confirmed the primary branch still has zero application tables.
 
 ## Pre-cutover verification
 
@@ -42,7 +42,9 @@ npm run test
 npm run build
 ```
 
-The baseline build exposed `/`, `/[feature]`, and the framework not-found route.
+The current implementation passes `npm run check` and exposes dedicated authentication, auth API, and inbox routes in addition to the existing CRM routes. A direct auth smoke check verified a disposable user could sign up through the staging branch's Neon Auth endpoint, receive a session, and load the authenticated inbox.
+
+Playwright coverage now includes protected-route redirect, sign-up/sign-out, channel filtering, persistent send, deterministic auto-reply, status, tag, internal note, fail-once retry, and duplicate prevention. The first browser run found and led to fixes for pre-hydration native form submission, cross-origin test configuration, and concurrent workspace bootstrap. The required post-fix Chromium rerun remains pending because the execution environment reached its external-execution usage limit.
 
 ## Cutover order
 
@@ -68,4 +70,13 @@ If the staging cutover fails:
 
 ## Final verification record
 
-This section will be updated with safe branch, GitHub, deployment, and check results after staging is live. Secret values and connection strings must never be added.
+Local and Neon staging implementation is complete through the browser-test checkpoint. The Git worktree is clean and the full non-browser gate passes.
+
+Remote cutover is intentionally paused because `gh auth status` reports that the saved `jcbags101` token is invalid. No GitHub repository was created, no branch was pushed, no Vercel Git integration or environment value was changed, and the rollback deployment remains untouched. Resume with:
+
+```text
+gh auth login -h github.com
+gh auth status
+```
+
+After authentication, create the private empty `philinspect-crm` repository, publish only `staging`, connect the existing Vercel project to that branch, replace its Production-target variables with the already prepared Neon staging values, deploy, and run the pending Chromium suite against the stable URL. Secret values and connection strings must never be added to this record.

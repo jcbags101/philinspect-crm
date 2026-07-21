@@ -11,6 +11,10 @@ A realistic CRM proof of concept built from a read-only product audit. The app u
 - Revenue, billing plans, and product/service catalog
 - Audit logs, integrations, responsive navigation, and CRM copilot mock
 - Searchable data views and a kanban-style deal pipeline
+- Neon Auth email/password sign-up, sign-in, protected routes, and workspace roles
+- RelayDesk-style Messenger and Instagram mock inbox with four fictional accounts
+- Persistent messages, delivery states, retry, assignment, unread state, tags, and internal notes
+- A permanent demo safety indicator; no messaging provider SDK, iframe, or external send
 
 ## Stack
 
@@ -20,6 +24,7 @@ A realistic CRM proof of concept built from a read-only product audit. The app u
 - Neon Auth for staging identity and sessions
 - Vercel Functions pool lifecycle support
 - Vitest, ESLint, and production build verification
+- Playwright Chromium smoke coverage
 
 ## Local setup
 
@@ -50,10 +55,11 @@ branch.
 
 ```bash
 npm run check       # lint, typecheck, tests, and production build
+npm run test:e2e    # Chromium auth and inbox smoke suite
 npm run db:generate # generate a Drizzle migration
 npm run db:migrate  # apply migrations
 npm run db:seed     # replace demo data with deterministic fixtures
-npm run db:reset    # migrate and reseed the demo database
+npm run db:reset    # replace application demo data with deterministic fixtures
 ```
 
 The product design and implementation plan are stored under [`docs/`](docs/).
