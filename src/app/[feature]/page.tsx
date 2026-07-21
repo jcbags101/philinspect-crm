@@ -7,7 +7,7 @@ import { DealBoard } from "@/components/deal-board";
 import { RecordsView, type RecordColumn, type RecordRow } from "@/components/records-view";
 import { getDb } from "@/db/client";
 import {
-  auditLogs, billingPlans, brands, catalogItems, communicationChannels, conversations,
+  auditLogs, billingPlans, brands, catalogItems,
   deals, integrationConnections, leads, meetings, partnershipAccounts, proposals,
   revenueEntries, roles, userRoles, users,
 } from "@/db/schema";
@@ -43,11 +43,6 @@ async function loadView(feature: string): Promise<View | null> {
   if (feature === "brands") {
     const rows = await db.select({ id: brands.id, name: brands.name, domain: brands.domain, industry: brands.industry, owner: users.name, updatedAt: brands.updatedAt }).from(brands).leftJoin(users, eq(brands.ownerId, users.id)).where(isNull(brands.deletedAt)).orderBy(brands.name).limit(100);
     return { title: "Brands", description: "A shared view of every customer and company relationship.", noun: "brand", columns: [{ key: "name", label: "Brand" }, { key: "domain", label: "Website" }, { key: "industry", label: "Industry", badge: true }, { key: "owner", label: "Account owner" }, { key: "updated", label: "Last updated" }], rows: rows.map((row) => ({ id: row.id, name: row.name, domain: row.domain, industry: row.industry, owner: row.owner, updated: date(row.updatedAt) })) };
-  }
-
-  if (feature === "inbox") {
-    const rows = await db.select({ id: conversations.id, participant: conversations.participantLabel, subject: conversations.subject, channel: communicationChannels.label, lastMessageAt: conversations.lastMessageAt, unreadAt: conversations.unreadAt, brand: brands.name }).from(conversations).innerJoin(communicationChannels, eq(conversations.channelId, communicationChannels.id)).leftJoin(brands, eq(conversations.brandId, brands.id)).orderBy(desc(conversations.lastMessageAt));
-    return { title: "Inbox", description: "Customer conversations across every connected channel.", noun: "conversation", columns: [{ key: "participant", label: "Contact" }, { key: "subject", label: "Subject" }, { key: "brand", label: "Brand" }, { key: "channel", label: "Channel", badge: true }, { key: "state", label: "State", badge: true }, { key: "lastMessage", label: "Last message" }], rows: rows.map((row) => ({ id: row.id, participant: row.participant, subject: row.subject, channel: row.channel, brand: row.brand, state: row.unreadAt ? "Unread" : "Read", lastMessage: date(row.lastMessageAt) })) };
   }
 
   if (feature === "meetings") {

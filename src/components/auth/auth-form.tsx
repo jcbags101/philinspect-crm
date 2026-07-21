@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { LoaderCircle, LockKeyhole } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,12 @@ interface AuthFormProps {
   mode: "sign-in" | "sign-up";
 }
 
+const subscribeToHydration = () => () => undefined;
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
+  const mounted = useSyncExternalStore(subscribeToHydration, () => true, () => false);
   const [error, setError] = useState<string | null>(null);
   const isSignUp = mode === "sign-up";
 
@@ -76,9 +79,9 @@ export function AuthForm({ mode }: AuthFormProps) {
             {isSignUp && <p className="text-xs text-muted-foreground">Use at least 8 characters.</p>}
           </div>
           {error && <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
-          <Button className="w-full" type="submit" disabled={pending}>
+          <Button className="w-full" type="submit" disabled={pending || !mounted}>
             {pending && <LoaderCircle className="animate-spin" />}
-            {pending ? "Please wait" : isSignUp ? "Create account" : "Sign in"}
+            {!mounted ? "Loading secure form…" : pending ? "Please wait" : isSignUp ? "Create account" : "Sign in"}
           </Button>
         </form>
         <p className="mt-6 text-center text-sm text-muted-foreground">
