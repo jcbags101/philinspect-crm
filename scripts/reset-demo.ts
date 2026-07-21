@@ -2,7 +2,7 @@ import { seedDemoData } from "./seed-data";
 
 async function main() {
   await seedDemoData();
-  console.info("Reset the Symph CRM demo database to its baseline fixtures.");
+  console.info("Reset the PhilInspect CRM demo database to its baseline fixtures.");
 }
 
 main().catch((error: unknown) => {

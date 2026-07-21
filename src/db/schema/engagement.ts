@@ -1,5 +1,4 @@
 import {
-  index,
   jsonb,
   pgEnum,
   pgTable,
@@ -12,13 +11,6 @@ import {
 import { brands, deals } from "./crm";
 import { users } from "./identity";
 
-export const channelTypeEnum = pgEnum("channel_type", [
-  "email",
-  "messenger",
-  "instagram",
-  "whatsapp",
-  "viber",
-]);
 export const meetingStatusEnum = pgEnum("meeting_status", [
   "pending",
   "done",
@@ -37,51 +29,6 @@ export const partnershipStatusEnum = pgEnum("partnership_status", [
   "pending",
   "approved",
 ]);
-
-export const communicationChannels = pgTable("communication_channels", {
-  id: uuid("id").defaultRandom().primaryKey(),
-  type: channelTypeEnum("type").notNull(),
-  label: varchar("label", { length: 80 }).notNull(),
-});
-
-export const conversations = pgTable(
-  "conversations",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    channelId: uuid("channel_id")
-      .notNull()
-      .references(() => communicationChannels.id),
-    brandId: uuid("brand_id").references(() => brands.id),
-    subject: varchar("subject", { length: 240 }).notNull(),
-    participantLabel: varchar("participant_label", { length: 180 }).notNull(),
-    lastMessageAt: timestamp("last_message_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-    unreadAt: timestamp("unread_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [index("conversations_channel_idx").on(table.channelId)],
-);
-
-export const messages = pgTable(
-  "messages",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    conversationId: uuid("conversation_id")
-      .notNull()
-      .references(() => conversations.id, { onDelete: "cascade" }),
-    senderLabel: varchar("sender_label", { length: 180 }).notNull(),
-    direction: varchar("direction", { length: 12 }).notNull(),
-    body: text("body").notNull(),
-    fixture: jsonb("fixture"),
-    sentAt: timestamp("sent_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-  },
-  (table) => [index("messages_conversation_idx").on(table.conversationId)],
-);
 
 export const meetings = pgTable("meetings", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -174,4 +121,3 @@ export const partnershipGroupMembers = pgTable("partnership_group_members", {
     .notNull()
     .references(() => partnershipAccounts.id, { onDelete: "cascade" }),
 });
-

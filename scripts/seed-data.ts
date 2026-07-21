@@ -10,6 +10,8 @@ import {
   brands,
   catalogItems,
   communicationChannels,
+  conversationTagLinks,
+  conversationTags,
   conversations,
   dealStageHistory,
   deals,
@@ -18,6 +20,8 @@ import {
   leads,
   meetings,
   messages,
+  messageAttempts,
+  messagingAccounts,
   notes,
   partnershipAccounts,
   partnershipGroupMembers,
@@ -30,6 +34,7 @@ import {
   roles,
   userRoles,
   users,
+  workspaces,
 } from "../src/db/schema";
 
 config({ path: ".env.local" });
@@ -120,8 +125,12 @@ export async function seedDemoData(): Promise<void> {
         proposals,
         recordings,
         meetings,
+        conversation_tag_links,
+        conversation_tags,
+        message_attempts,
         messages,
         conversations,
+        messaging_accounts,
         communication_channels,
         attachments,
         notes,
@@ -134,7 +143,8 @@ export async function seedDemoData(): Promise<void> {
         demo_sessions,
         user_roles,
         roles,
-        users
+        users,
+        workspaces
       RESTART IDENTITY CASCADE
     `);
 
@@ -145,10 +155,20 @@ export async function seedDemoData(): Promise<void> {
     ];
     await db.insert(roles).values(roleRows);
 
+    const workspaceRow: typeof workspaces.$inferInsert = {
+      id: id(4, 1),
+      neonAuthOrganizationId: "demo:philinspect-staging",
+      name: "PhilInspect CRM Demo",
+      createdAt: daysAgo(120),
+      updatedAt: fixedNow,
+    };
+    await db.insert(workspaces).values(workspaceRow);
+
     const userRows: (typeof users.$inferInsert)[] = Array.from(
       { length: 12 },
       (_, index) => ({
         id: id(2, index + 1),
+        workspaceId: workspaceRow.id!,
         name: `${firstNames[index]} ${lastNames[index % lastNames.length]}`,
         email: `${firstNames[index].toLowerCase()}@demo.symph.local`,
         createdAt: daysAgo(90 - index),
@@ -305,29 +325,129 @@ export async function seedDemoData(): Promise<void> {
     }));
     await db.insert(communicationChannels).values(channelRows);
 
+    const messagingAccountRows: (typeof messagingAccounts.$inferInsert)[] = [
+      ["messenger", "Northstar Support", "Northstar Support", "fixture-messenger-northstar"],
+      ["messenger", "Harbor Sales", "Harbor Sales", "fixture-messenger-harbor"],
+      ["instagram", "PhilInspect Studio", "@philinspect_demo", "fixture-instagram-studio"],
+      ["instagram", "Launchpad PH", "@launchpad_demo", "fixture-instagram-launchpad"],
+    ].map(([channel, label, handle, externalId], index) => ({
+      id: id(36, index + 1),
+      workspaceId: workspaceRow.id!,
+      channel: channel as "messenger" | "instagram",
+      label,
+      handle,
+      fictionalExternalAccountId: externalId,
+      status: index === 3 ? "warning" : "connected",
+      syncWarning: index === 3 ? "Simulated sync delay · retry is safe" : null,
+      fixture: { simulated: true, adapter: "mock", accountIndex: index },
+      lastSyncedAt: new Date(fixedNow.getTime() - index * 240_000),
+    }));
+    await db.insert(messagingAccounts).values(messagingAccountRows);
+
+    const inboxChannels = {
+      messenger: channelRows.find((row) => row.type === "messenger")!,
+      instagram: channelRows.find((row) => row.type === "instagram")!,
+    };
     const conversationRows: (typeof conversations.$inferInsert)[] = Array.from(
-      { length: 30 },
-      (_, index) => ({
-        id: id(21, index + 1),
-        channelId: channelRows[index % channelRows.length].id!,
-        brandId: brandRows[index % brandRows.length].id!,
-        subject: `Demo conversation ${index + 1}`,
-        participantLabel: `Fictional contact ${index + 1}`,
-        lastMessageAt: daysAgo(index % 15),
-        unreadAt: index % 4 === 0 ? daysAgo(index % 15) : null,
-        createdAt: daysAgo(45 - (index % 40)),
-      }),
+      { length: 24 },
+      (_, index) => {
+        const account = messagingAccountRows[index % messagingAccountRows.length];
+        const channel = account.channel as "messenger" | "instagram";
+        const unreadCount = index % 4 === 0 ? (index % 3) + 1 : 0;
+        const lastMessageAt = new Date(fixedNow.getTime() - index * 3_600_000);
+        return {
+          id: id(21, index + 1),
+          workspaceId: workspaceRow.id!,
+          messagingAccountId: account.id!,
+          providerConversationId: `fixture-${channel}-conversation-${String(index + 1).padStart(3, "0")}`,
+          channelId: inboxChannels[channel].id!,
+          brandId: brandRows[index % brandRows.length].id!,
+          assigneeId: index % 5 === 0 ? null : userRows[index % 8].id!,
+          subject: ["Product inspection", "Demo request", "Pricing question", "Follow-up"][index % 4],
+          participantLabel: `Fictional customer ${String(index + 1).padStart(2, "0")}`,
+          participantHandle: channel === "instagram" ? `@demo_customer_${index + 1}` : null,
+          status: ["open", "pending", "resolved"][index % 3] as "open" | "pending" | "resolved",
+          unreadCount,
+          lastMessagePreview: `Fictional conversation update ${index + 1}.`,
+          lastMessageAt,
+          unreadAt: unreadCount ? lastMessageAt : null,
+          createdAt: daysAgo(42 - index),
+          updatedAt: lastMessageAt,
+        };
+      },
     );
     await db.insert(conversations).values(conversationRows);
-    await db.insert(messages).values(
-      Array.from({ length: 90 }, (_, index) => ({
-        id: id(22, index + 1),
-        conversationId: conversationRows[index % conversationRows.length].id!,
-        senderLabel: index % 2 === 0 ? "Demo contact" : "Symph demo user",
-        direction: index % 2 === 0 ? "inbound" : "outbound",
-        body: `This is fictional demo message ${index + 1}.`,
-        fixture: { simulated: true },
-        sentAt: daysAgo(index % 20),
+
+    const messageRows: (typeof messages.$inferInsert)[] = conversationRows.flatMap((conversation, conversationIndex) =>
+      Array.from({ length: 7 }, (_, messageIndex) => {
+        const direction = messageIndex === 5 && conversationIndex % 6 === 0
+          ? "internal"
+          : messageIndex % 2 === 0
+            ? "inbound"
+            : "outbound";
+        const isFailOnce = conversationIndex === 3 && messageIndex === 5;
+        return {
+          id: id(22, conversationIndex * 7 + messageIndex + 1),
+          workspaceId: workspaceRow.id!,
+          conversationId: conversation.id!,
+          senderUserId: direction === "inbound" ? null : userRows[conversationIndex % 8].id!,
+          senderLabel: direction === "inbound"
+            ? conversation.participantLabel
+            : direction === "internal"
+              ? "Internal note · Demo team"
+              : "PhilInspect demo agent",
+          direction,
+          body: direction === "internal"
+            ? "Internal demo note: confirm the fictional requirements before the next reply."
+            : `Fictional ${direction} message ${messageIndex + 1} for conversation ${conversationIndex + 1}.`,
+          deliveryState: isFailOnce
+            ? "failed"
+            : direction === "outbound"
+              ? (["sent", "delivered", "read"][messageIndex % 3] as "sent" | "delivered" | "read")
+              : "delivered",
+          idempotencyKey: direction === "outbound" ? `fixture-send-${conversationIndex + 1}-${messageIndex + 1}` : null,
+          providerMessageId: isFailOnce ? null : `fixture-message-${conversationIndex + 1}-${messageIndex + 1}`,
+          deliveryError: isFailOnce ? "Simulated temporary delivery failure" : null,
+          fixture: {
+            simulated: true,
+            scenario: isFailOnce ? "fail_once" : messageIndex === 6 ? "auto_reply" : "success",
+          },
+          sentAt: new Date(new Date(conversation.createdAt!).getTime() + messageIndex * 1_800_000),
+          updatedAt: new Date(new Date(conversation.createdAt!).getTime() + messageIndex * 1_800_000),
+        };
+      }),
+    );
+    await db.insert(messages).values(messageRows);
+    await db.insert(messageAttempts).values(
+      messageRows
+        .filter((message) => message.direction === "outbound")
+        .map((message, index) => ({
+          id: id(37, index + 1),
+          workspaceId: workspaceRow.id!,
+          messageId: message.id!,
+          attemptNumber: 1,
+          state: message.deliveryState!,
+          safeError: message.deliveryState === "failed" ? "Simulated temporary delivery failure" : null,
+          createdAt: message.sentAt,
+        })),
+    );
+
+    const tagRows: (typeof conversationTags.$inferInsert)[] = [
+      ["VIP", "violet"],
+      ["Follow up", "amber"],
+      ["New lead", "blue"],
+      ["Support", "emerald"],
+    ].map(([name, color], index) => ({
+      id: id(38, index + 1),
+      workspaceId: workspaceRow.id!,
+      name,
+      color,
+    }));
+    await db.insert(conversationTags).values(tagRows);
+    await db.insert(conversationTagLinks).values(
+      conversationRows.map((conversation, index) => ({
+        conversationId: conversation.id!,
+        tagId: tagRows[index % tagRows.length].id!,
       })),
     );
 
@@ -476,6 +596,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(auditLogs).values(
       Array.from({ length: 1855 }, (_, index) => ({
         id: id(35, index + 1),
+        workspaceId: workspaceRow.id!,
         actorId: userRows[index % userRows.length].id!,
         entityType: ["deal", "lead", "brand", "proposal", "billing"][index % 5],
         entityId: dealRows[index % dealRows.length].id!,

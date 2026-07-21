@@ -16,13 +16,13 @@ export async function getSessionContext(): Promise<SessionContext | null> {
   const { data } = await auth.getSession();
   if (!data?.user) return null;
 
-  const organizationId = data.session.activeOrganizationId ?? `personal:${data.user.id}`;
+  const organizationId = data.session.activeOrganizationId ?? "demo:philinspect-staging";
   const member = await resolveWorkspaceMember({
     authUserId: data.user.id,
     organizationId,
     organizationName: data.session.activeOrganizationId
       ? "PhilInspect CRM Workspace"
-      : `${data.user.name || "My"} Workspace`,
+      : "PhilInspect CRM Demo",
     name: data.user.name || data.user.email,
     email: data.user.email,
   });

@@ -2,7 +2,7 @@ import { seedDemoData } from "./seed-data";
 
 async function main() {
   await seedDemoData();
-  console.info("Seeded the deterministic Symph CRM demo dataset.");
+  console.info("Seeded the deterministic PhilInspect CRM demo dataset.");
 }
 
 main().catch((error: unknown) => {

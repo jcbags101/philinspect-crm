@@ -15,6 +15,20 @@
       "when": 1784642443717,
       "tag": "0001_stiff_dark_beast",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784642794704,
+      "tag": "0002_romantic_exodus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784642855765,
+      "tag": "0003_messy_hemingway",
+      "breakpoints": true
     }
   ]
 }

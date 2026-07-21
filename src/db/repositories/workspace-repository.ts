@@ -1,4 +1,4 @@
-import { and, count, eq, isNull } from "drizzle-orm";
+import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
 import { roles, userRoles, users, workspaces } from "@/db/schema";
@@ -67,7 +67,7 @@ export async function countWorkspaceMembers(
   const [result] = await db
     .select({ value: count() })
     .from(users)
-    .where(eq(users.workspaceId, workspaceId));
+    .where(and(eq(users.workspaceId, workspaceId), isNotNull(users.authUserId)));
   return result?.value ?? 0;
 }
 

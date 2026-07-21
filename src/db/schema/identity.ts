@@ -34,7 +34,7 @@ export const users = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     authUserId: varchar("auth_user_id", { length: 255 }),
-    workspaceId: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
     name: varchar("name", { length: 160 }).notNull(),
     email: varchar("email", { length: 255 }).notNull(),
     avatarUrl: varchar("avatar_url", { length: 500 }),

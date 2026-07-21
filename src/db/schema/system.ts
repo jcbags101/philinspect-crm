@@ -17,6 +17,13 @@ export const auditActionEnum = pgEnum("audit_action", [
   "deleted",
   "restored",
   "permanent_deleted",
+  "sent",
+  "retried",
+  "assigned",
+  "tagged",
+  "noted",
+  "read_status",
+  "reset",
 ]);
 
 export const integrationStatusEnum = pgEnum("integration_status", [
@@ -39,7 +46,7 @@ export const auditLogs = pgTable(
   "audit_logs",
   {
     id: uuid("id").defaultRandom().primaryKey(),
-    workspaceId: uuid("workspace_id").references(() => workspaces.id, { onDelete: "cascade" }),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
     actorId: uuid("actor_id").references(() => users.id),
     entityType: varchar("entity_type", { length: 80 }).notNull(),
     entityId: uuid("entity_id"),
