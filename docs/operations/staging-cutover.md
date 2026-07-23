@@ -22,7 +22,7 @@ Status: Staging cutover complete and browser-verified
 | Vercel team | `team_DHwCmuGXBLaeVKKqntMbikjH` | Existing team retained |
 | Vercel project | `prj_TA6Km0gpwns0e44xhubAM3ARNG1a` | `crm-symph-poc` |
 | Previous Vercel deployment | `dpl_DoAqbBq1Knh9FR2wiFkkzHPRMdbV` | Pre-cutover rollback reference retained |
-| Verified Vercel deployment | `dpl_G2JYAWnfYHMwAwtYwJNsNdWAiDD5` | READY Production-target staging deployment |
+| Browser-verified Vercel deployment | `dpl_G2JYAWnfYHMwAwtYwJNsNdWAiDD5` | READY Production-target staging deployment |
 | Stable staging URL | `crm-symph-poc.vercel.app` | Aliased to the verified deployment |
 | Older local Neon project | `holy-pond-71585430` | Retain; do not delete |
 | Target Neon project | `curly-block-65583676` | `PhilInspectCRM` |
@@ -110,7 +110,7 @@ If the staging cutover fails:
 - No database URL, password, cookie secret, access token, or customer data is
   stored in Git or this record.
 
-The last application release used an authenticated Vercel CLI fallback because
-the corresponding Git webhook was delayed. The Git integration remains enabled
-with `productionBranch: staging`; subsequent staging pushes should be checked
-for a Git-sourced deployment before using the same fallback.
+The application fix release initially used an authenticated Vercel CLI fallback
+because its Git webhook was delayed. The following documentation push produced
+a READY Git-sourced deployment from GitHub `staging`, confirming that the
+integration recovered and still uses `productionBranch: staging`.
