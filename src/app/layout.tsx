@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { AppShell } from "@/components/app-shell";
 import { getSessionContext } from "@/server/auth/session-context";
 import "./globals.css";
+import "../styles/tokens.css";
+import "../styles/typography.css";
+import "../styles/utilities.css";
 
 export const metadata: Metadata = {
   title: {
@@ -23,7 +26,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className="dark h-full antialiased"
+      className="h-full antialiased"
       suppressHydrationWarning
     >
       <body className="min-h-full">

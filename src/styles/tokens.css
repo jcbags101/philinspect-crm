@@ -1,0 +1,114 @@
+:root {
+  color-scheme: light;
+
+  /* PhilInspect foundations — Figma: 01 - Foundations */
+  --pi-surface-canvas: #fafafa;
+  --pi-surface-raised: #ffffff;
+  --pi-surface-sidebar: var(--pi-surface-raised);
+  --pi-surface-subtle: #f4f4f5;
+  --pi-content-primary: #0e0e0e;
+  --pi-content-secondary: #52525b;
+  --pi-content-inverse: #ffffff;
+  --pi-border-default: #e5e5e5;
+  --pi-brand-primary: #2563eb;
+  --pi-brand-soft: #eaf3ff;
+  --pi-badge-neutral: #52525b;
+  --pi-badge-purple: #7c3aed;
+  --pi-badge-warning: #d97706;
+  --pi-status-success: #183923;
+  --pi-status-danger: #a8121d;
+
+  --pi-space-1: 0.25rem;
+  --pi-space-2: 0.5rem;
+  --pi-space-3: 0.75rem;
+  --pi-space-4: 1rem;
+  --pi-space-6: 1.5rem;
+  --pi-space-8: 2rem;
+  --pi-space-12: 3rem;
+  --pi-space-16: 4rem;
+
+  --pi-radius-sm: 0.25rem;
+  --pi-radius-md: 0.5rem;
+  --pi-radius-lg: 0.75rem;
+
+  --pi-shadow-card: 0 1px 2px rgb(14 14 14 / 5%);
+  --pi-shadow-floating:
+    0 8px 24px rgb(14 14 14 / 10%),
+    0 2px 8px rgb(14 14 14 / 6%);
+  --pi-focus-ring: 0 0 0 3px rgb(37 99 235 / 18%);
+
+  --pi-layer-base: 0;
+  --pi-layer-sticky: 20;
+  --pi-layer-navigation: 30;
+  --pi-layer-overlay: 50;
+  --pi-layer-toast: 60;
+
+  /* shadcn/Base UI semantic bridge */
+  --background: var(--pi-surface-canvas);
+  --foreground: var(--pi-content-primary);
+  --card: var(--pi-surface-raised);
+  --card-foreground: var(--pi-content-primary);
+  --popover: var(--pi-surface-raised);
+  --popover-foreground: var(--pi-content-primary);
+  --primary: var(--pi-brand-primary);
+  --primary-foreground: var(--pi-content-inverse);
+  --secondary: var(--pi-surface-subtle);
+  --secondary-foreground: var(--pi-content-primary);
+  --muted: var(--pi-surface-subtle);
+  --muted-foreground: var(--pi-content-secondary);
+  --accent: var(--pi-surface-subtle);
+  --accent-foreground: var(--pi-content-primary);
+  --destructive: var(--pi-status-danger);
+  --border: var(--pi-border-default);
+  --input: var(--pi-border-default);
+  --ring: var(--pi-brand-primary);
+  --chart-1: #2563eb;
+  --chart-2: #183923;
+  --chart-3: #a8121d;
+  --chart-4: #52525b;
+  --chart-5: #a1a1aa;
+  --radius: var(--pi-radius-md);
+  --sidebar: var(--pi-surface-raised);
+  --sidebar-foreground: var(--pi-content-primary);
+  --sidebar-primary: var(--pi-brand-primary);
+  --sidebar-primary-foreground: var(--pi-content-inverse);
+  --sidebar-accent: var(--pi-surface-subtle);
+  --sidebar-accent-foreground: var(--pi-content-primary);
+  --sidebar-border: var(--pi-border-default);
+  --sidebar-ring: var(--pi-brand-primary);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /*
+   * The product screens in Figma use Default mode. These dark-mode semantics
+   * preserve the file's secondary mode without changing the default surface.
+   */
+  --pi-surface-canvas: #18181b;
+  --pi-surface-raised: #202024;
+  --pi-surface-sidebar: var(--pi-surface-raised);
+  --pi-surface-subtle: #27272a;
+  --pi-content-primary: #fafafa;
+  --pi-content-secondary: #a1a1aa;
+  --pi-content-inverse: #0e0e0e;
+  --pi-border-default: #3f3f46;
+  --pi-brand-primary: #3b82f6;
+  --pi-brand-soft: rgb(59 130 246 / 18%);
+  --pi-badge-neutral: #a1a1aa;
+  --pi-badge-purple: #a78bfa;
+  --pi-badge-warning: #fbbf24;
+  --pi-status-success: #86efac;
+  --pi-status-danger: #fca5a5;
+
+  --pi-shadow-card: 0 1px 2px rgb(0 0 0 / 30%);
+  --pi-shadow-floating:
+    0 12px 32px rgb(0 0 0 / 38%),
+    0 2px 8px rgb(0 0 0 / 24%);
+
+  --chart-1: #60a5fa;
+  --chart-2: #86efac;
+  --chart-3: #fca5a5;
+  --chart-4: #d4d4d8;
+  --chart-5: #71717a;
+}

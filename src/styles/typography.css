@@ -1,0 +1,68 @@
+@layer components {
+  .pi-page-title {
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.125rem;
+  }
+
+  .pi-section-title {
+    font-family: var(--font-sans);
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1.375rem;
+  }
+
+  .pi-body {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 1rem;
+  }
+
+  .pi-body-medium {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 1rem;
+  }
+
+  .pi-body-strong {
+    font-family: var(--font-sans);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    line-height: 1rem;
+  }
+
+  .pi-ui-label {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 0.875rem;
+  }
+
+  .pi-caption {
+    color: var(--pi-content-secondary);
+    font-family: var(--font-sans);
+    font-size: 0.625rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 0.875rem;
+  }
+
+  .pi-eyebrow {
+    color: var(--pi-content-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.5625rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 0.75rem;
+    text-transform: uppercase;
+  }
+}

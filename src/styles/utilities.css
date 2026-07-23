@@ -1,0 +1,30 @@
+@layer components {
+  .pi-card {
+    border: 1px solid var(--pi-border-default);
+    border-radius: var(--pi-radius-md);
+    background: var(--pi-surface-raised);
+    box-shadow: var(--pi-shadow-card);
+  }
+
+  .pi-focus-ring {
+    outline: none;
+  }
+
+  .pi-focus-ring:focus-visible {
+    border-color: var(--pi-brand-primary);
+    box-shadow: var(--pi-focus-ring);
+  }
+
+  .pi-page-grid {
+    display: grid;
+    gap: var(--pi-space-4);
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+  }
+}
+
+@layer utilities {
+  .crm-scrollbar {
+    scrollbar-color: rgb(82 82 91 / 35%) transparent;
+    scrollbar-width: thin;
+  }
+}
