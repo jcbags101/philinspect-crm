@@ -2,6 +2,8 @@
 
 A realistic CRM proof of concept built from a read-only product audit. The app uses entirely fictional demo data and does not contain source-system screenshots, credentials, or customer records.
 
+Staging demo: [crm-symph-poc.vercel.app](https://crm-symph-poc.vercel.app)
+
 ## Demo scope
 
 - Overview dashboard with live pipeline and activity metrics
@@ -46,6 +48,7 @@ branch.
 
 - The current Vercel project is staging only.
 - GitHub `staging` is the only deployed branch during the POC.
+- The private source repository is `jcbags101/philinspect-crm`.
 - `main`, the Neon primary branch, and a separate production Vercel project are
   reserved until an explicit go-live approval.
 - The RelayDesk inbox is a persistent mock and never contacts a real messaging

@@ -1,7 +1,7 @@
 # PhilInspectCRM Staging Cutover
 
-Date: 2026-07-21  
-Status: Local application implementation complete; GitHub authentication blocks remote cutover
+Date: 2026-07-23
+Status: Staging cutover complete and browser-verified
 
 ## Guardrails
 
@@ -17,11 +17,13 @@ Status: Local application implementation complete; GitHub authentication blocks 
 
 | Resource | Safe identifier | Baseline |
 |---|---|---|
-| Local Git branch | `agent/bootstrap-crm-poc` | Verified implementation commit `32052ce` |
+| GitHub repository | `jcbags101/philinspect-crm` | Private repository |
+| Git branch | `staging` | Only published and deployed source branch |
 | Vercel team | `team_DHwCmuGXBLaeVKKqntMbikjH` | Existing team retained |
 | Vercel project | `prj_TA6Km0gpwns0e44xhubAM3ARNG1a` | `crm-symph-poc` |
-| Ready Vercel deployment | `dpl_DoAqbBq1Knh9FR2wiFkkzHPRMdbV` | Ready deployment retained |
-| Stable Vercel URL | `crm-symph-poc.vercel.app` | Current rollback entry point |
+| Previous Vercel deployment | `dpl_DoAqbBq1Knh9FR2wiFkkzHPRMdbV` | Pre-cutover rollback reference retained |
+| Verified Vercel deployment | `dpl_G2JYAWnfYHMwAwtYwJNsNdWAiDD5` | READY Production-target staging deployment |
+| Stable staging URL | `crm-symph-poc.vercel.app` | Aliased to the verified deployment |
 | Older local Neon project | `holy-pond-71585430` | Retain; do not delete |
 | Target Neon project | `curly-block-65583676` | `PhilInspectCRM` |
 | Target Neon primary branch | `br-broad-lake-azseiabj` | Reserved for future production |
@@ -44,18 +46,43 @@ npm run build
 
 The current implementation passes `npm run check` and exposes dedicated authentication, auth API, and inbox routes in addition to the existing CRM routes. A direct auth smoke check verified a disposable user could sign up through the staging branch's Neon Auth endpoint, receive a session, and load the authenticated inbox.
 
-Playwright coverage now includes protected-route redirect, sign-up/sign-out, channel filtering, persistent send, deterministic auto-reply, status, tag, internal note, fail-once retry, and duplicate prevention. The first browser run found and led to fixes for pre-hydration native form submission, cross-origin test configuration, and concurrent workspace bootstrap. The required post-fix Chromium rerun remains pending because the execution environment reached its external-execution usage limit.
+Playwright coverage includes protected-route redirect, sign-up/sign-out, channel
+filtering, persistent send, deterministic auto-reply, status, tag, internal
+note, fail-once retry, and duplicate prevention. Live verification also found
+and led to fixes for:
+
+- pre-hydration native form submission;
+- concurrent workspace bootstrap;
+- a Neon Auth middleware redirect affecting authenticated Next.js Server
+  Actions;
+- a missing `type="submit"` on the internal-note form;
+- browser assertions that depended on mutable conversation ordering.
+
+The stable staging URL passed the complete Chromium suite:
+
+```text
+3 passed (1.3m)
+```
+
+The non-browser gate also passes:
+
+```text
+npm run check
+```
 
 ## Cutover order
 
-1. Create a persistent PhilInspectCRM child branch named `staging`.
-2. Point ignored local environment values to that branch.
-3. Apply migrations and deterministic fictional seed data only to `staging`.
-4. Implement and verify Neon Auth and the mock unified inbox locally.
-5. Push the verified history to the private GitHub `staging` branch.
-6. Connect the existing Vercel project to GitHub `staging`.
-7. Replace that project's environment values with PhilInspectCRM staging values.
-8. Deploy and run staging smoke tests.
+1. Created a persistent PhilInspectCRM child branch named `staging`.
+2. Pointed ignored local environment values to that branch.
+3. Applied migrations and deterministic fictional seed data only to `staging`.
+4. Implemented and verified Neon Auth and the mock unified inbox.
+5. Published the private GitHub repository with only the `staging` branch.
+6. Connected the existing Vercel project with `productionBranch: staging`.
+7. Replaced the Vercel Production-target database and Auth bindings with
+   PhilInspectCRM staging values.
+8. Added the stable Vercel URL to the staging branch's Neon Auth trusted
+   origins.
+9. Deployed and completed live browser verification.
 
 ## Rollback order
 
@@ -70,13 +97,20 @@ If the staging cutover fails:
 
 ## Final verification record
 
-Local and Neon staging implementation is complete through the browser-test checkpoint. The Git worktree is clean and the full non-browser gate passes.
+- GitHub authentication is valid for `jcbags101`.
+- `jcbags101/philinspect-crm` is private and publishes only `staging`.
+- The Vercel project remains staging-only and maps its Production target to
+  GitHub `staging`.
+- The stable URL serves a READY deployment containing the internal-note and
+  authenticated Server Action fixes.
+- Neon Auth accepts the stable staging origin.
+- Live browser verification passes all three auth and inbox scenarios.
+- The PhilInspectCRM primary branch still has zero public application tables.
+- No real Messenger, Instagram, Viber, Meta, or other provider API is connected.
+- No database URL, password, cookie secret, access token, or customer data is
+  stored in Git or this record.
 
-Remote cutover is intentionally paused because `gh auth status` reports that the saved `jcbags101` token is invalid. No GitHub repository was created, no branch was pushed, no Vercel Git integration or environment value was changed, and the rollback deployment remains untouched. Resume with:
-
-```text
-gh auth login -h github.com
-gh auth status
-```
-
-After authentication, create the private empty `philinspect-crm` repository, publish only `staging`, connect the existing Vercel project to that branch, replace its Production-target variables with the already prepared Neon staging values, deploy, and run the pending Chromium suite against the stable URL. Secret values and connection strings must never be added to this record.
+The last application release used an authenticated Vercel CLI fallback because
+the corresponding Git webhook was delayed. The Git integration remains enabled
+with `productionBranch: staging`; subsequent staging pushes should be checked
+for a Git-sourced deployment before using the same fallback.
