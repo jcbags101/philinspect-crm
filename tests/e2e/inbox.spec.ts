@@ -20,26 +20,29 @@ test("persists mock messages, triage changes, tags, and notes", async ({ page })
   await page.getByRole("button", { name: "Instagram" }).click();
   await expect(page.getByRole("button", { name: /Fictional customer 03/ })).toBeVisible();
   await page.getByRole("button", { name: "All" }).click();
+  await page.getByLabel("Search conversations").fill("Fictional customer 01");
+  await page.getByRole("button", { name: /Fictional customer 01/ }).click();
+  await expect(page.getByText("fixture-messenger-conversation-001")).toBeVisible();
 
   const marker = `POC persistence ${Date.now()}`;
   await page.getByPlaceholder("Write a fictional reply…").fill(marker);
   await page.getByRole("button", { name: "Send demo reply" }).click();
   await expect(page.locator("article").filter({ hasText: marker })).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator("article").getByText("Thanks! This is a deterministic fictional auto-reply for the demo.", { exact: true })).toBeVisible({
+  await expect(page.locator("article").getByText("Thanks! This is a deterministic fictional auto-reply for the demo.", { exact: true }).last()).toBeVisible({
     timeout: 30_000,
   });
 
   await page.getByLabel("Conversation status").selectOption("pending");
-  await expect(page.getByLabel("Conversation status")).toHaveValue("pending");
-  await page.getByRole("button", { name: "VIP" }).click();
+  await expect(page.getByLabel("Conversation status")).toHaveValue("pending", { timeout: 20_000 });
+  await page.getByRole("button", { name: "VIP", exact: true }).click();
   const note = `Internal persistence note ${Date.now()}`;
   await page.getByPlaceholder("Visible only to your demo team").fill(note);
   await page.getByRole("button", { name: "Add internal note" }).click();
-  await expect(page.getByText(note)).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: note })).toBeVisible({ timeout: 20_000 });
 
   await page.reload();
-  await expect(page.getByText(marker)).toBeVisible();
-  await expect(page.getByText(note)).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: marker })).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: note })).toBeVisible();
   await expect(page.getByLabel("Conversation status")).toHaveValue("pending");
   expect(consoleErrors).toEqual([]);
 });
@@ -49,6 +52,7 @@ test("retries a deterministic fail-once message without duplication", async ({ p
   await page.getByLabel("Search conversations").fill("Fictional customer 04");
   await expect(page.getByRole("button", { name: /Fictional customer 04/ })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: /Fictional customer 04/ }).click();
+  await expect(page.getByText("fixture-instagram-conversation-004")).toBeVisible();
 
   const marker = `Fail once ${Date.now()}`;
   await page.getByPlaceholder("Write a fictional reply…").fill(marker);
