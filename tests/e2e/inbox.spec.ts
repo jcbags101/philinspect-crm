@@ -24,8 +24,10 @@ test("persists mock messages, triage changes, tags, and notes", async ({ page })
   const marker = `POC persistence ${Date.now()}`;
   await page.getByPlaceholder("Write a fictional reply…").fill(marker);
   await page.getByRole("button", { name: "Send demo reply" }).click();
-  await expect(page.getByText(marker)).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText("Thanks! This is a deterministic fictional auto-reply for the demo.")).toBeVisible();
+  await expect(page.locator("article").filter({ hasText: marker })).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("article").getByText("Thanks! This is a deterministic fictional auto-reply for the demo.", { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
 
   await page.getByLabel("Conversation status").selectOption("pending");
   await expect(page.getByLabel("Conversation status")).toHaveValue("pending");
@@ -51,8 +53,10 @@ test("retries a deterministic fail-once message without duplication", async ({ p
   const marker = `Fail once ${Date.now()}`;
   await page.getByPlaceholder("Write a fictional reply…").fill(marker);
   await page.getByRole("button", { name: "Send demo reply" }).click();
-  await expect(page.getByText("Simulated temporary delivery failure")).toBeVisible({ timeout: 20_000 });
-  await page.getByRole("button", { name: "Retry" }).click();
-  await expect(page.getByText("read", { exact: true }).last()).toBeVisible({ timeout: 20_000 });
-  await expect(page.getByText(marker)).toHaveCount(1);
+  const failedMessage = page.locator("article").filter({ hasText: marker });
+  await expect(failedMessage).toBeVisible({ timeout: 20_000 });
+  await expect(failedMessage.getByText("Simulated temporary delivery failure")).toBeVisible();
+  await failedMessage.getByRole("button", { name: "Retry", exact: true }).click();
+  await expect(failedMessage.getByText("read", { exact: true })).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator("article").filter({ hasText: marker })).toHaveCount(1);
 });

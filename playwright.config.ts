@@ -20,7 +20,7 @@ export default defineConfig({
   webServer: deployedBaseURL
     ? undefined
     : {
-        command: "npm run dev",
+        command: "npm run dev -- --webpack",
         url: `${baseURL}/auth/sign-in`,
         reuseExistingServer: true,
         timeout: 120_000,
