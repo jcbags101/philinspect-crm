@@ -16,6 +16,47 @@ interface AuthFormProps {
 }
 
 const subscribeToHydration = () => () => undefined;
+const AUTH_TIMEOUT_MS = 20_000;
+
+function withTimeout<T>(promise: Promise<T>, message: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timeout = window.setTimeout(
+      () => reject(new Error(message)),
+      AUTH_TIMEOUT_MS,
+    );
+
+    promise.then(
+      (value) => {
+        window.clearTimeout(timeout);
+        resolve(value);
+      },
+      (error) => {
+        window.clearTimeout(timeout);
+        reject(error);
+      },
+    );
+  });
+}
+
+async function readBootstrapResponse(response: Response): Promise<{
+  error?: string;
+  user?: { name: string; role: string };
+} | null> {
+  const body = (await response.json().catch(() => null)) as {
+    error?: unknown;
+    user?: { name?: unknown; role?: unknown };
+  } | null;
+
+  if (!body) return null;
+  return {
+    error: typeof body.error === "string" ? body.error : undefined,
+    user:
+      typeof body.user?.name === "string" &&
+      typeof body.user.role === "string"
+        ? { name: body.user.name, role: body.user.role }
+        : undefined,
+  };
+}
 
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
@@ -34,18 +75,61 @@ export function AuthForm({ mode }: AuthFormProps) {
     const password = String(form.get("password") ?? "");
     const name = String(form.get("name") ?? "").trim();
 
-    const result = isSignUp
-      ? await authClient.signUp.email({ email, password, name, callbackURL: "/" })
-      : await authClient.signIn.email({ email, password, callbackURL: "/" });
+    let authenticated = false;
 
-    if (result.error) {
-      setError(result.error.message || "Authentication failed. Please try again.");
+    try {
+      const result = await withTimeout(
+        isSignUp
+          ? authClient.signUp.email({
+              email,
+              password,
+              name,
+              callbackURL: "/",
+            })
+          : authClient.signIn.email({
+              email,
+              password,
+              callbackURL: "/",
+            }),
+        "Authentication took too long. Please try again.",
+      );
+
+      if (result.error) {
+        throw new Error(
+          result.error.message || "Authentication failed. Please try again.",
+        );
+      }
+      authenticated = true;
+
+      const bootstrapResponse = await withTimeout(
+        fetch("/api/session/bootstrap", {
+          method: "POST",
+          headers: { Accept: "application/json" },
+        }),
+        "Workspace setup took too long. Please sign in and try again.",
+      );
+      const bootstrapResult = await readBootstrapResponse(bootstrapResponse);
+      if (!bootstrapResponse.ok || !bootstrapResult?.user) {
+        throw new Error(
+          bootstrapResult?.error ??
+            "We could not finish setting up your workspace.",
+        );
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch (submissionError) {
+      const fallback = authenticated
+        ? "Your account is ready, but workspace setup did not finish. Please sign in and try again."
+        : "Authentication failed. Please try again.";
+      setError(
+        submissionError instanceof Error && submissionError.message
+          ? submissionError.message
+          : fallback,
+      );
+    } finally {
       setPending(false);
-      return;
     }
-
-    router.replace("/");
-    router.refresh();
   }
 
   return (
