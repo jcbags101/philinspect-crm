@@ -7,10 +7,11 @@ import { ShellHeader } from "@/components/shell/header";
 import { Sidebar } from "@/components/shell/sidebar";
 import { cn } from "@/lib/utils";
 import { authClient } from "@/lib/auth/client";
+import type { AppRole } from "@/server/auth/permissions";
 
 interface AppShellProps {
   children: React.ReactNode;
-  currentUser: { name: string; role: string } | null;
+  currentUser: { name: string; role: AppRole } | null;
 }
 
 export function AppShell({ children, currentUser }: AppShellProps) {
@@ -48,7 +49,7 @@ export function AppShell({ children, currentUser }: AppShellProps) {
           collapsed ? "w-16" : "w-60",
         )}
       >
-        <Sidebar collapsed={collapsed} />
+        <Sidebar collapsed={collapsed} role={currentUser?.role} />
       </aside>
       <div
         className={cn(

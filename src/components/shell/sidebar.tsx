@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
+import { hasPermission, type AppRole } from "@/server/auth/permissions";
 import {
   isNavigationItemActive,
   navigationGroups,
@@ -14,6 +15,7 @@ import {
 interface SidebarProps {
   collapsed: boolean;
   close?: () => void;
+  role?: AppRole;
 }
 
 function Brand({ collapsed, close }: SidebarProps) {
@@ -82,8 +84,10 @@ function SidebarLink({
   );
 }
 
-export function Sidebar({ collapsed, close }: SidebarProps) {
+export function Sidebar({ collapsed, close, role }: SidebarProps) {
   const pathname = usePathname();
+  const canShow = (item: NavigationItem) =>
+    !item.requiredPermission || Boolean(role && hasPermission(role, item.requiredPermission));
 
   return (
     <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
@@ -96,7 +100,7 @@ export function Sidebar({ collapsed, close }: SidebarProps) {
         aria-label="Main navigation"
       >
         <div className="space-y-4">
-          {navigationGroups.map((group) => (
+          {navigationGroups.map((group) => ({ ...group, items: group.items.filter(canShow) })).filter((group) => group.items.length > 0).map((group) => (
             <div key={group.label}>
               {!collapsed && (
                 <p className="pi-eyebrow mb-1 px-2.5">{group.label}</p>
@@ -119,12 +123,7 @@ export function Sidebar({ collapsed, close }: SidebarProps) {
       </nav>
 
       <div className="border-t border-sidebar-border p-2">
-        <SidebarLink
-          item={settingsNavigationItem}
-          pathname={pathname}
-          collapsed={collapsed}
-          close={close}
-        />
+        {canShow(settingsNavigationItem) && <SidebarLink item={settingsNavigationItem} pathname={pathname} collapsed={collapsed} close={close} />}
       </div>
     </div>
   );

@@ -29,6 +29,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { hasPermission, type AppRole } from "@/server/auth/permissions";
 import { allNavigationItems, getCurrentNavigationItem } from "./navigation";
 import { Sidebar } from "./sidebar";
 import { ThemeToggle } from "./theme-toggle";
@@ -37,7 +38,7 @@ interface ShellHeaderProps {
   collapsed: boolean;
   mobileOpen: boolean;
   persona: string;
-  currentUser: { name: string; role: string } | null;
+  currentUser: { name: string; role: AppRole } | null;
   onCollapsedChange: () => void;
   onMobileOpenChange: (open: boolean) => void;
   onPersonaChange: (persona: string) => void;
@@ -46,7 +47,7 @@ interface ShellHeaderProps {
 
 const personas = ["Account Manager", "Sales", "Admin"];
 
-function JumpToMenu() {
+function JumpToMenu({ role }: { role?: AppRole }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -65,7 +66,7 @@ function JumpToMenu() {
       <DropdownMenuContent align="start" className="w-48">
         <DropdownMenuLabel>Jump to</DropdownMenuLabel>
         <DropdownMenuGroup>
-          {allNavigationItems.map((item) => {
+          {allNavigationItems.filter((item) => !item.requiredPermission || Boolean(role && hasPermission(role, item.requiredPermission))).map((item) => {
             const Icon = item.icon;
             return (
               <DropdownMenuItem
@@ -166,9 +167,7 @@ function AccountSummary({
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem render={<Link href="/settings" />}>
-          Account settings
-        </DropdownMenuItem>
+        {currentUser?.role === "admin" && <DropdownMenuItem render={<Link href="/settings" />}>Account settings</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -207,6 +206,7 @@ export function ShellHeader({
           <Sidebar
             collapsed={false}
             close={() => onMobileOpenChange(false)}
+            role={currentUser?.role}
           />
         </SheetContent>
       </Sheet>
@@ -236,7 +236,7 @@ export function ShellHeader({
         <span className="pi-eyebrow hidden rounded-md border border-border bg-card px-2 py-1 md:inline-flex">
           Demo
         </span>
-        <JumpToMenu />
+        <JumpToMenu role={currentUser?.role} />
         <PersonaMenu persona={persona} onPersonaChange={onPersonaChange} />
         <ThemeToggle />
         <AccountSummary currentUser={currentUser} />
