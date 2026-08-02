@@ -2,8 +2,9 @@ import {
   listWorkspaceAuditEvents,
   writeAuditEvent,
 } from "@/db/repositories/audit-repository";
+import { getDb } from "@/db/client";
+import type { Database } from "@/db/repositories/workspace-repository";
 import type {
-  DatabaseExecutor,
   DatabaseTransaction,
 } from "@/db/repositories/workspace-repository";
 import type { auditLogs } from "@/db/schema";
@@ -52,9 +53,9 @@ export async function recordAudit(
 }
 
 export async function getWorkspaceAuditEvents(
-  database: DatabaseExecutor,
   context: SessionContext,
   limit?: number,
+  database: Database = getDb(),
 ) {
   assertPermission(context.role, "audit:read");
   return listWorkspaceAuditEvents(database, context.workspaceId, limit);

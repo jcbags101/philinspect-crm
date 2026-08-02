@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 
-import { auditLogs } from "@/db/schema";
+import { auditLogs, users } from "@/db/schema";
 import type { DatabaseExecutor } from "./workspace-repository";
 
 export async function writeAuditEvent(
@@ -19,6 +19,7 @@ export async function listWorkspaceAuditEvents(
     .select({
       id: auditLogs.id,
       actorId: auditLogs.actorId,
+      actorName: users.name,
       entityType: auditLogs.entityType,
       entityId: auditLogs.entityId,
       action: auditLogs.action,
@@ -29,6 +30,7 @@ export async function listWorkspaceAuditEvents(
       createdAt: auditLogs.createdAt,
     })
     .from(auditLogs)
+    .leftJoin(users, eq(auditLogs.actorId, users.id))
     .where(eq(auditLogs.workspaceId, workspaceId))
     .orderBy(desc(auditLogs.createdAt))
     .limit(Math.min(Math.max(limit, 1), 250));
