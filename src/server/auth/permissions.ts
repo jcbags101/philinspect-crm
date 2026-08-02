@@ -1,3 +1,5 @@
+import { DomainError } from "@/server/errors/domain-error";
+
 export type AppRole = "account_manager" | "sales" | "admin";
 
 export type Permission =
@@ -23,9 +25,9 @@ export function assertPermission(role: AppRole, permission: Permission): void {
   }
 }
 
-export class PermissionDeniedError extends Error {
+export class PermissionDeniedError extends DomainError {
   constructor(public readonly permission: Permission) {
-    super("You do not have permission to perform this action.");
+    super("forbidden", "You do not have permission to perform this action.");
     this.name = "PermissionDeniedError";
   }
 }

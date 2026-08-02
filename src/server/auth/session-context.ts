@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { z } from "zod";
 
 import { auth } from "@/lib/auth/server";
+import { UnauthenticatedError } from "@/server/errors/domain-error";
 import { resolveWorkspaceMember } from "@/server/services/workspace-service";
 import type { AppRole } from "./permissions";
 
@@ -129,6 +130,6 @@ export async function bootstrapSessionContext(): Promise<SessionContext | null> 
 
 export async function requireSessionContext(): Promise<SessionContext> {
   const context = await getSessionContext();
-  if (!context) throw new Error("Authentication required.");
+  if (!context) throw new UnauthenticatedError();
   return context;
 }

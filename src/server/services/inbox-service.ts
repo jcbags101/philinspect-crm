@@ -19,6 +19,7 @@ import {
 import { messagingAdapter, type MockScenario } from "@/integrations/messaging";
 import { assertPermission } from "@/server/auth/permissions";
 import type { SessionContext } from "@/server/auth/session-context";
+import { NotFoundError } from "@/server/errors/domain-error";
 import {
   assignmentSchema,
   noteSchema,
@@ -30,7 +31,7 @@ import {
 } from "@/server/validation/inbox";
 import { recordInboxAudit } from "./audit-service";
 
-export class InboxNotFoundError extends Error {
+export class InboxNotFoundError extends NotFoundError {
   constructor() {
     super("The conversation could not be found.");
     this.name = "InboxNotFoundError";
