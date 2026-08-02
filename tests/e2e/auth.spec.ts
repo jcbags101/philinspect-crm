@@ -1,22 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-function uniqueEmail(prefix: string): string {
-  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`;
-}
-
-test("protects the inbox and supports sign-up and sign-out", async ({ page }) => {
+test("protects CRM routes and keeps failed authentication responsive", async ({ page }) => {
   await page.goto("/inbox");
   await expect(page).toHaveURL(/\/auth\/sign-in/);
+  await expect(page.getByRole("heading", { name: "Welcome back" })).toBeVisible();
+
+  await page.getByLabel("Email").fill(`missing-${Date.now()}@example.test`);
+  await page.getByLabel("Password").fill("Invalid-demo-password-2026!");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByRole("alert")).toBeVisible({ timeout: 25_000 });
+  await expect(page.getByRole("button", { name: "Sign in" })).toBeEnabled();
 
   await page.getByRole("link", { name: "Create an account" }).click();
-  await page.getByLabel("Name").fill("Playwright Demo User");
-  await page.getByLabel("Email").fill(uniqueEmail("auth-smoke"));
-  await page.getByLabel("Password").fill("Fictional-demo-password-2026!");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/$/, { timeout: 20_000 });
-
-  await page.goto("/inbox");
-  await expect(page.getByRole("heading", { name: "Unified inbox" })).toBeVisible();
-  await page.getByRole("button", { name: "Sign out" }).click();
-  await expect(page).toHaveURL(/\/auth\/sign-in/);
+  await expect(page).toHaveURL(/\/auth\/sign-up/);
+  await expect(page.getByText("Create an identity, then accept an invitation")).toBeVisible();
 });

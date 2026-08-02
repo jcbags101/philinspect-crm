@@ -1,20 +1,21 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function signUp(page: Page) {
-  await page.goto("/auth/sign-up");
-  await page.getByLabel("Name").fill("Inbox Test Agent");
-  await page.getByLabel("Email").fill(`inbox-${Date.now()}-${Math.random().toString(36).slice(2)}@example.test`);
-  await page.getByLabel("Password").fill("Fictional-demo-password-2026!");
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page).toHaveURL(/\/$/, { timeout: 20_000 });
+import { readCredentials, signIn } from "./helpers/auth";
+
+const adminCredentials = readCredentials("PLAYWRIGHT_ADMIN");
+
+async function openInbox(page: Page) {
+  if (!adminCredentials) throw new Error("PLAYWRIGHT_ADMIN credentials are required.");
+  await signIn(page, adminCredentials);
   await page.goto("/inbox");
   await expect(page.getByRole("heading", { name: "Unified inbox" })).toBeVisible();
 }
 
 test("persists mock messages, triage changes, tags, and notes", async ({ page }) => {
+  test.skip(!adminCredentials, "Set PLAYWRIGHT_ADMIN_EMAIL and PLAYWRIGHT_ADMIN_PASSWORD.");
   const consoleErrors: string[] = [];
   page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
-  await signUp(page);
+  await openInbox(page);
 
   await expect(page.getByText("Demo — no external message sent")).toBeVisible();
   await page.getByRole("button", { name: "Instagram" }).click();
@@ -48,7 +49,8 @@ test("persists mock messages, triage changes, tags, and notes", async ({ page })
 });
 
 test("retries a deterministic fail-once message without duplication", async ({ page }) => {
-  await signUp(page);
+  test.skip(!adminCredentials, "Set PLAYWRIGHT_ADMIN_EMAIL and PLAYWRIGHT_ADMIN_PASSWORD.");
+  await openInbox(page);
   await page.getByLabel("Search conversations").fill("Fictional customer 04");
   await expect(page.getByRole("button", { name: /Fictional customer 04/ })).toBeVisible({ timeout: 20_000 });
   await page.getByRole("button", { name: /Fictional customer 04/ }).click();

@@ -6,7 +6,7 @@ import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { LoaderCircle, LockKeyhole } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth/client";
@@ -144,7 +144,9 @@ export function AuthForm({ mode }: AuthFormProps) {
           <LockKeyhole className="size-5" />
         </div>
         <div>
-          <CardTitle className="text-2xl">{isSignUp ? "Create your staging account" : "Welcome back"}</CardTitle>
+          <h1 className="font-heading text-2xl font-medium leading-snug">
+            {isSignUp ? "Create your staging account" : "Welcome back"}
+          </h1>
           <CardDescription className="mt-2">
             {isSignUp ? "Create an identity, then accept an invitation to a CRM workspace." : "Sign in to your PhilInspect CRM workspace."}
           </CardDescription>
