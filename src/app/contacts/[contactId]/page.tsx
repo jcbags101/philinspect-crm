@@ -2,8 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { setContactArchivedAction } from "@/app/contacts/actions";
+import { EntityArchiveAction } from "@/components/entity-archive-action";
 import { PageHeader } from "@/components/page-header";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { NotFoundError } from "@/server/errors/domain-error";
@@ -29,7 +30,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
         actions={
           <>
             <Link className={buttonVariants({ variant: "outline" })} href={`/contacts/${contact.id}/edit`}>Edit</Link>
-            <form action={archiveAction}><Button variant={contact.deletedAt ? "outline" : "destructive"} type="submit">{contact.deletedAt ? "Restore" : "Archive"}</Button></form>
+            <EntityArchiveAction action={archiveAction} archived={Boolean(contact.deletedAt)} entityLabel={name} />
           </>
         }
       />

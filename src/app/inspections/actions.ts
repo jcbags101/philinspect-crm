@@ -22,6 +22,9 @@ export async function updateInspectionAction(id: string, _previous: ActionResult
   catch (error) { return translateActionError(error, { operation: "update inspection" }); }
   revalidatePath("/inspections"); revalidatePath(`/inspections/${id}`); redirect(`/inspections/${id}`);
 }
-export async function setInspectionArchivedAction(id: string, archived: boolean): Promise<void> {
-  await archiveInspection(await requireSessionContext(), id, archived); revalidatePath("/inspections"); revalidatePath(`/inspections/${id}`);
+export async function setInspectionArchivedAction(id: string, archived: boolean, _previous: ActionResult): Promise<ActionResult> {
+  void _previous;
+  try { await archiveInspection(await requireSessionContext(), id, archived); }
+  catch (error) { return translateActionError(error, { operation: archived ? "archive inspection" : "restore inspection" }); }
+  revalidatePath("/inspections"); revalidatePath(`/inspections/${id}`); return { ok: true };
 }

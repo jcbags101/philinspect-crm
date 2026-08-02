@@ -63,8 +63,15 @@ export async function updateContactAction(
 export async function setContactArchivedAction(
   contactId: string,
   archived: boolean,
-): Promise<void> {
-  await archiveContact(await requireSessionContext(), contactId, archived);
+  _previous: ActionResult,
+): Promise<ActionResult> {
+  void _previous;
+  try {
+    await archiveContact(await requireSessionContext(), contactId, archived);
+  } catch (error) {
+    return translateActionError(error, { operation: archived ? "archive contact" : "restore contact" });
+  }
   revalidatePath("/contacts");
   revalidatePath(`/contacts/${contactId}`);
+  return { ok: true };
 }

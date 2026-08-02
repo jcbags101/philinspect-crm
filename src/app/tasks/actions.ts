@@ -41,8 +41,14 @@ export async function updateTaskAction(taskId: string, _previous: ActionResult, 
   redirect(`/tasks/${taskId}`);
 }
 
-export async function setTaskArchivedAction(taskId: string, archived: boolean): Promise<void> {
-  await archiveTask(await requireSessionContext(), taskId, archived);
+export async function setTaskArchivedAction(taskId: string, archived: boolean, _previous: ActionResult): Promise<ActionResult> {
+  void _previous;
+  try {
+    await archiveTask(await requireSessionContext(), taskId, archived);
+  } catch (error) {
+    return translateActionError(error, { operation: archived ? "archive task" : "restore task" });
+  }
   revalidatePath("/tasks");
   revalidatePath(`/tasks/${taskId}`);
+  return { ok: true };
 }

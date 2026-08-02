@@ -84,8 +84,15 @@ export async function moveDealStageAction(
 export async function setDealArchivedAction(
   dealId: string,
   archived: boolean,
-): Promise<void> {
-  await archiveDeal(await requireSessionContext(), dealId, archived);
+  _previous: ActionResult,
+): Promise<ActionResult> {
+  void _previous;
+  try {
+    await archiveDeal(await requireSessionContext(), dealId, archived);
+  } catch (error) {
+    return translateActionError(error, { operation: archived ? "archive deal" : "restore deal" });
+  }
   revalidatePath("/deals");
   revalidatePath(`/deals/${dealId}`);
+  return { ok: true };
 }

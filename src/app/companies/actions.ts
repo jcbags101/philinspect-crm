@@ -62,8 +62,15 @@ export async function updateCompanyAction(
 export async function setCompanyArchivedAction(
   companyId: string,
   archived: boolean,
-): Promise<void> {
-  await archiveCompany(await requireSessionContext(), companyId, archived);
+  _previous: ActionResult,
+): Promise<ActionResult> {
+  void _previous;
+  try {
+    await archiveCompany(await requireSessionContext(), companyId, archived);
+  } catch (error) {
+    return translateActionError(error, { operation: archived ? "archive company" : "restore company" });
+  }
   revalidatePath("/companies");
   revalidatePath(`/companies/${companyId}`);
+  return { ok: true };
 }

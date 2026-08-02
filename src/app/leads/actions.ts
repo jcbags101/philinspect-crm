@@ -67,10 +67,17 @@ export async function updateLeadAction(
 export async function setLeadArchivedAction(
   leadId: string,
   archived: boolean,
-): Promise<void> {
-  await archiveLead(await requireSessionContext(), leadId, archived);
+  _previous: ActionResult,
+): Promise<ActionResult> {
+  void _previous;
+  try {
+    await archiveLead(await requireSessionContext(), leadId, archived);
+  } catch (error) {
+    return translateActionError(error, { operation: archived ? "archive lead" : "restore lead" });
+  }
   revalidatePath("/leads");
   revalidatePath(`/leads/${leadId}`);
+  return { ok: true };
 }
 
 export async function convertLeadAction(
