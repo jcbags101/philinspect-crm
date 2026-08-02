@@ -18,6 +18,7 @@ import {
   UsersRound,
   ContactRound,
   ListTodo,
+  ClipboardCheck,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -47,6 +48,7 @@ export const navigationGroups: NavigationGroup[] = [
       { href: "/companies", label: "Companies", icon: Building2 },
       { href: "/contacts", label: "Contacts", icon: ContactRound },
       { href: "/tasks", label: "Tasks", icon: ListTodo },
+      { href: "/inspections", label: "Inspections", icon: ClipboardCheck },
       { href: "/wiki", label: "Wiki", icon: BookOpen },
     ],
   },

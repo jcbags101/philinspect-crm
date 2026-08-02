@@ -77,6 +77,25 @@ export async function findWorkspaceMemberByEmail(
   return member ?? null;
 }
 
+export async function findActiveWorkspaceMemberByUserId(
+  database: DatabaseExecutor,
+  workspaceId: string,
+  userId: string,
+) {
+  const [member] = await database
+    .select({ id: workspaceMemberships.id, userId: workspaceMemberships.userId })
+    .from(workspaceMemberships)
+    .where(
+      and(
+        eq(workspaceMemberships.workspaceId, workspaceId),
+        eq(workspaceMemberships.userId, userId),
+        eq(workspaceMemberships.status, "active"),
+      ),
+    )
+    .limit(1);
+  return member ?? null;
+}
+
 export async function countActiveWorkspaceAdmins(
   database: DatabaseExecutor,
   workspaceId: string,
