@@ -44,6 +44,12 @@ Use the PhilInspectCRM `staging` branch. Set a pooled Neon URL for
 characters. Never point local or staging environments at the Neon primary
 branch.
 
+Integration tests use a separate Neon child branch. Set `TEST_DATABASE_URL`,
+`TEST_DATABASE_BRANCH_ID`, and the exact marker
+`TEST_DATABASE_TARGET=philinspect-crm-test` only in ignored local/CI secrets.
+The harness refuses a missing marker or a URL that resolves to any configured
+runtime database before it truncates application tables.
+
 ## Delivery model
 
 - The current Vercel project is staging only.
@@ -58,6 +64,9 @@ branch.
 
 ```bash
 npm run check       # lint, typecheck, tests, and production build
+npm run test:unit   # isolated unit tests; no database required
+npm run test:integration # migrations/reset checks against TEST_DATABASE_URL
+npm run test:all    # unit and isolated integration tests
 npm run test:e2e    # Chromium auth and inbox smoke suite
 npm run db:generate # generate a Drizzle migration
 npm run db:migrate  # apply migrations
