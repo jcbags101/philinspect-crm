@@ -1,41 +1,34 @@
 import { getDb } from "@/db/client";
 import {
-  countWorkspaceMembers,
-  createOrLinkWorkspaceMember,
-  findOrCreateWorkspace,
   findWorkspaceMemberByAuthUserId,
   type WorkspaceMemberRecord,
 } from "@/db/repositories/workspace-repository";
+import { DomainError } from "@/server/errors/domain-error";
 
 export interface AuthIdentity {
   authUserId: string;
-  organizationId: string;
-  organizationName: string;
+  organizationId?: string;
   name: string;
   email: string;
 }
 
+export class WorkspaceAccessDeniedError extends DomainError {
+  constructor() {
+    super(
+      "forbidden",
+      "Your account does not have access to a PhilInspect CRM workspace.",
+    );
+    this.name = "WorkspaceAccessDeniedError";
+  }
+}
+
 export async function resolveWorkspaceMember(identity: AuthIdentity): Promise<WorkspaceMemberRecord> {
   const db = getDb();
-  const existing = await findWorkspaceMemberByAuthUserId(db, identity.authUserId);
+  const existing = await findWorkspaceMemberByAuthUserId(
+    db,
+    identity.authUserId,
+    identity.organizationId,
+  );
   if (existing) return existing;
-
-  await db.transaction(async (tx) => {
-    const concurrent = await findWorkspaceMemberByAuthUserId(tx, identity.authUserId);
-    if (concurrent) return;
-
-    const workspace = await findOrCreateWorkspace(tx, identity.organizationId, identity.organizationName);
-    const memberCount = await countWorkspaceMembers(tx, workspace.id);
-    await createOrLinkWorkspaceMember(tx, {
-      authUserId: identity.authUserId,
-      workspaceId: workspace.id,
-      name: identity.name,
-      email: identity.email,
-      role: memberCount === 0 ? "admin" : "account_manager",
-    });
-  });
-
-  const created = await findWorkspaceMemberByAuthUserId(db, identity.authUserId);
-  if (!created) throw new Error("Workspace membership could not be initialized.");
-  return created;
+  throw new WorkspaceAccessDeniedError();
 }

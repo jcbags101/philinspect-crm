@@ -1,4 +1,5 @@
 import { bootstrapSessionContext } from "@/server/auth/session-context";
+import { WorkspaceAccessDeniedError } from "@/server/services/workspace-service";
 
 export async function POST() {
   try {
@@ -17,8 +18,15 @@ export async function POST() {
       },
     });
   } catch (error) {
+    if (error instanceof WorkspaceAccessDeniedError) {
+      return Response.json(
+        { error: error.message, code: "workspace_access_denied" },
+        { status: 403 },
+      );
+    }
+
     console.error("[auth-bootstrap] failed", {
-      error: error instanceof Error ? error.message : String(error),
+      errorName: error instanceof Error ? error.name : "UnknownError",
     });
 
     return Response.json(

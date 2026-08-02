@@ -90,13 +90,9 @@ async function resolveSessionContextFromAuth(
 ): Promise<SessionContext | null> {
   if (!data?.user) return null;
 
-  const organizationId = data.session.activeOrganizationId ?? "demo:philinspect-staging";
   const member = await resolveWorkspaceMember({
     authUserId: data.user.id,
-    organizationId,
-    organizationName: data.session.activeOrganizationId
-      ? "PhilInspect CRM Workspace"
-      : "PhilInspect CRM Demo",
+    organizationId: data.session.activeOrganizationId ?? undefined,
     name: data.user.name || data.user.email,
     email: data.user.email,
   });

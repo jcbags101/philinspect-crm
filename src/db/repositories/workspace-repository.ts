@@ -1,7 +1,13 @@
-import { and, count, eq, isNotNull, isNull } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
-import { roles, userRoles, users, workspaces } from "@/db/schema";
+import {
+  roles,
+  userRoles,
+  users,
+  workspaceMemberships,
+  workspaces,
+} from "@/db/schema";
 import type { AppRole } from "@/server/auth/permissions";
 
 export type Database = ReturnType<typeof getDb>;
@@ -20,6 +26,7 @@ export interface WorkspaceMemberRecord {
 export async function findWorkspaceMemberByAuthUserId(
   db: DatabaseExecutor,
   authUserId: string,
+  organizationId?: string,
 ): Promise<WorkspaceMemberRecord | null> {
   const [member] = await db
     .select({
@@ -28,13 +35,20 @@ export async function findWorkspaceMemberByAuthUserId(
       workspaceName: workspaces.name,
       name: users.name,
       email: users.email,
-      role: roles.name,
+      role: workspaceMemberships.role,
     })
-    .from(users)
-    .innerJoin(workspaces, eq(users.workspaceId, workspaces.id))
-    .innerJoin(userRoles, eq(users.id, userRoles.userId))
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .where(eq(users.authUserId, authUserId))
+    .from(workspaceMemberships)
+    .innerJoin(users, eq(workspaceMemberships.userId, users.id))
+    .innerJoin(workspaces, eq(workspaceMemberships.workspaceId, workspaces.id))
+    .where(
+      and(
+        eq(users.authUserId, authUserId),
+        eq(workspaceMemberships.status, "active"),
+        organizationId
+          ? eq(workspaces.neonAuthOrganizationId, organizationId)
+          : undefined,
+      ),
+    )
     .limit(1);
 
   return member ?? null;
@@ -58,17 +72,6 @@ export async function findOrCreateWorkspace(
 
   if (!workspace) throw new Error("Workspace could not be resolved.");
   return workspace;
-}
-
-export async function countWorkspaceMembers(
-  db: DatabaseTransaction,
-  workspaceId: string,
-): Promise<number> {
-  const [result] = await db
-    .select({ value: count() })
-    .from(users)
-    .where(and(eq(users.workspaceId, workspaceId), isNotNull(users.authUserId)));
-  return result?.value ?? 0;
 }
 
 export async function createOrLinkWorkspaceMember(
@@ -123,4 +126,16 @@ export async function createOrLinkWorkspaceMember(
   if (!role) throw new Error(`Required CRM role is missing: ${input.role}`);
 
   await db.insert(userRoles).values({ userId, roleId: role.id }).onConflictDoNothing();
+  await db
+    .insert(workspaceMemberships)
+    .values({
+      workspaceId: input.workspaceId,
+      userId,
+      role: input.role,
+      status: "active",
+    })
+    .onConflictDoUpdate({
+      target: [workspaceMemberships.workspaceId, workspaceMemberships.userId],
+      set: { role: input.role, status: "active", updatedAt: new Date() },
+    });
 }

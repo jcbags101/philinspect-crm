@@ -109,6 +109,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         "Workspace setup took too long. Please sign in and try again.",
       );
       const bootstrapResult = await readBootstrapResponse(bootstrapResponse);
+      if (bootstrapResponse.status === 403) {
+        router.replace("/auth/access-denied");
+        router.refresh();
+        return;
+      }
       if (!bootstrapResponse.ok || !bootstrapResult?.user) {
         throw new Error(
           bootstrapResult?.error ??
@@ -141,7 +146,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div>
           <CardTitle className="text-2xl">{isSignUp ? "Create your staging account" : "Welcome back"}</CardTitle>
           <CardDescription className="mt-2">
-            {isSignUp ? "Start a private PhilInspect CRM demo workspace." : "Sign in to the PhilInspect CRM staging demo."}
+            {isSignUp ? "Create an identity, then accept an invitation to a CRM workspace." : "Sign in to your PhilInspect CRM workspace."}
           </CardDescription>
         </div>
       </CardHeader>
