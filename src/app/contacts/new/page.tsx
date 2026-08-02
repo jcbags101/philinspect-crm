@@ -1,12 +1,12 @@
 import { ContactForm } from "@/components/contacts/contact-form";
 import { PageHeader } from "@/components/page-header";
-import { assertPermission } from "@/server/auth/permissions";
+import { requirePagePermission } from "@/server/auth/page-authorization";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { getCompanies } from "@/server/services/company-service";
 
 export default async function NewContactPage() {
   const context = await requireSessionContext();
-  assertPermission(context.role, "contacts:write");
+  requirePagePermission(context.role, "contacts:write");
   const companies = await getCompanies(context);
   return (
     <>

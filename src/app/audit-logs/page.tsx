@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { requirePagePermission } from "@/server/auth/page-authorization";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { getWorkspaceAuditEvents } from "@/server/services/audit-service";
 
@@ -14,6 +15,7 @@ interface Props { searchParams: Promise<{ q?: string }> }
 export default async function AuditLogsPage({ searchParams }: Props) {
   const { q = "" } = await searchParams;
   const context = await requireSessionContext();
+  requirePagePermission(context.role, "audit:read");
   const events = await getWorkspaceAuditEvents(context, 250);
   const needle = q.trim().toLowerCase();
   const filtered = needle ? events.filter((event) => [event.label, event.action, event.entityType, event.actorName].some((value) => String(value ?? "").toLowerCase().includes(needle))) : events;

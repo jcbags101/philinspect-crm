@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { LeadForm } from "@/components/leads/lead-form";
 import { PageHeader } from "@/components/page-header";
-import { assertPermission } from "@/server/auth/permissions";
+import { requirePagePermission } from "@/server/auth/page-authorization";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { NotFoundError } from "@/server/errors/domain-error";
 import { getCompanies } from "@/server/services/company-service";
@@ -14,7 +14,7 @@ interface EditLeadPageProps { params: Promise<{ leadId: string }> }
 export default async function EditLeadPage({ params }: EditLeadPageProps) {
   const { leadId } = await params;
   const context = await requireSessionContext();
-  assertPermission(context.role, "leads:write");
+  requirePagePermission(context.role, "leads:write");
   const [lead, companies, contacts] = await Promise.all([
     getLead(context, leadId).catch((error) => {
       if (error instanceof NotFoundError) notFound();

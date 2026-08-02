@@ -4,6 +4,7 @@ import { InvitationRowAction } from "@/components/users/invitation-row-action";
 import { MemberEditor } from "@/components/users/member-editor";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { requirePagePermission } from "@/server/auth/page-authorization";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { getWorkspaceInvitations, getWorkspaceMembers } from "@/server/services/member-service";
 
@@ -12,6 +13,7 @@ const roleLabel = (role: string) => role.replaceAll("_", " ").replace(/\b\w/g, (
 
 export default async function UsersPage() {
   const context = await requireSessionContext();
+  requirePagePermission(context.role, "members:read");
   const canManage = context.role === "admin";
   const [members, invitations] = await Promise.all([
     getWorkspaceMembers(context),

@@ -1,13 +1,13 @@
 import { LeadForm } from "@/components/leads/lead-form";
 import { PageHeader } from "@/components/page-header";
-import { assertPermission } from "@/server/auth/permissions";
+import { requirePagePermission } from "@/server/auth/page-authorization";
 import { requireSessionContext } from "@/server/auth/session-context";
 import { getCompanies } from "@/server/services/company-service";
 import { getContacts } from "@/server/services/contact-service";
 
 export default async function NewLeadPage() {
   const context = await requireSessionContext();
-  assertPermission(context.role, "leads:write");
+  requirePagePermission(context.role, "leads:write");
   const [companies, contacts] = await Promise.all([
     getCompanies(context),
     getContacts(context),
