@@ -208,3 +208,8 @@ retaining 2 active administrators.
 
 No seed/reset was run against staging during this migration. The deterministic
 seed and reset validation ran only against the isolated `test` branch.
+
+GitHub `staging` was pushed through `eb3e8a3`, producing READY Git deployment
+`dpl_7rQdDWhHcEWQX1YJJQPWZg5KiY55`. The stable staging alias was attached with
+no alias error, so the deployed application and migrated staging schema are
+again on matching revisions.
