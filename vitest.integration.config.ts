@@ -7,7 +7,12 @@ config({ path: ".env.local", quiet: true });
 
 export default defineConfig({
   resolve: {
-    alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
+    alias: {
+      "server-only": fileURLToPath(
+        new URL("./tests/setup/server-only.ts", import.meta.url),
+      ),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
+    },
   },
   test: {
     include: ["tests/integration/**/*.test.ts"],

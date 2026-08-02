@@ -83,7 +83,7 @@ export async function createOrLinkWorkspaceMember(
     email: string;
     role: AppRole;
   },
-): Promise<void> {
+): Promise<string> {
   const [existingEmail] = await db
     .select({ id: users.id, authUserId: users.authUserId })
     .from(users)
@@ -138,4 +138,5 @@ export async function createOrLinkWorkspaceMember(
       target: [workspaceMemberships.workspaceId, workspaceMemberships.userId],
       set: { role: input.role, status: "active", updatedAt: new Date() },
     });
+  return userId;
 }

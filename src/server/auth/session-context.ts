@@ -34,6 +34,13 @@ const authSessionSchema = z.object({
 
 type AuthSessionData = z.infer<typeof authSessionSchema>;
 
+export interface AuthenticatedIdentity {
+  authUserId: string;
+  email: string;
+  name: string;
+  organizationId?: string;
+}
+
 function getAuthBaseUrl(): string {
   const value = process.env.NEON_AUTH_BASE_URL;
   if (!value) {
@@ -83,6 +90,28 @@ async function readAuthSession(): Promise<AuthSessionData | null> {
 
   const parsed = authSessionSchema.safeParse(await response.json());
   return parsed.success ? parsed.data : null;
+}
+
+function identityFromAuthSession(
+  data: AuthSessionData | null,
+): AuthenticatedIdentity | null {
+  if (!data?.user) return null;
+  return {
+    authUserId: data.user.id,
+    email: data.user.email,
+    name: data.user.name || data.user.email,
+    organizationId: data.session.activeOrganizationId ?? undefined,
+  };
+}
+
+export async function getAuthenticatedIdentity(): Promise<AuthenticatedIdentity | null> {
+  return identityFromAuthSession(await readAuthSession());
+}
+
+export async function requireAuthenticatedIdentity(): Promise<AuthenticatedIdentity> {
+  const identity = await getAuthenticatedIdentity();
+  if (!identity) throw new UnauthenticatedError();
+  return identity;
 }
 
 async function resolveSessionContextFromAuth(
