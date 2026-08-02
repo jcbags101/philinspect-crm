@@ -24,6 +24,14 @@ export const auditActionEnum = pgEnum("audit_action", [
   "noted",
   "read_status",
   "reset",
+  "invited",
+  "accepted",
+  "revoked",
+  "role_changed",
+  "converted",
+  "stage_moved",
+  "completed",
+  "archived",
 ]);
 
 export const integrationStatusEnum = pgEnum("integration_status", [
@@ -34,6 +42,7 @@ export const integrationStatusEnum = pgEnum("integration_status", [
 
 export const integrationConnections = pgTable("integration_connections", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   provider: varchar("provider", { length: 80 }).notNull(),
   status: integrationStatusEnum("status").notNull(),
   fixture: jsonb("fixture"),

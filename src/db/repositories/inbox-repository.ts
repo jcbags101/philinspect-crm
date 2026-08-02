@@ -2,7 +2,7 @@ import { and, asc, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 
 import { getDb } from "@/db/client";
 import {
-  brands,
+  companies,
   conversationTagLinks,
   conversationTags,
   conversations,
@@ -103,13 +103,13 @@ export async function listInboxConversations(workspaceId: string, filters: Conve
       channel: messagingAccounts.channel,
       assigneeId: users.id,
       assigneeName: users.name,
-      brandId: brands.id,
-      brandName: brands.name,
+      brandId: companies.id,
+      brandName: companies.name,
     })
     .from(conversations)
     .innerJoin(messagingAccounts, eq(conversations.messagingAccountId, messagingAccounts.id))
     .leftJoin(users, eq(conversations.assigneeId, users.id))
-    .leftJoin(brands, eq(conversations.brandId, brands.id))
+    .leftJoin(companies, eq(conversations.companyId, companies.id))
     .where(and(...conditions))
     .orderBy(desc(conversations.lastMessageAt))
     .limit(100);
@@ -139,14 +139,14 @@ export async function getConversationThread(workspaceId: string, conversationId:
       accountLabel: messagingAccounts.label,
       accountExternalId: messagingAccounts.fictionalExternalAccountId,
       channel: messagingAccounts.channel,
-      brandId: brands.id,
-      brandName: brands.name,
-      brandDomain: brands.domain,
-      brandIndustry: brands.industry,
+      brandId: companies.id,
+      brandName: companies.name,
+      brandDomain: companies.domain,
+      brandIndustry: companies.industry,
     })
     .from(conversations)
     .innerJoin(messagingAccounts, eq(conversations.messagingAccountId, messagingAccounts.id))
-    .leftJoin(brands, eq(conversations.brandId, brands.id))
+    .leftJoin(companies, eq(conversations.companyId, companies.id))
     .where(and(eq(conversations.workspaceId, workspaceId), eq(conversations.id, conversationId)))
     .limit(1);
   if (!conversation) return null;

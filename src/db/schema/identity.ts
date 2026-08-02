@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
   index,
   pgEnum,
@@ -13,6 +14,18 @@ export const roleNameEnum = pgEnum("role_name", [
   "account_manager",
   "sales",
   "admin",
+]);
+
+export const membershipStatusEnum = pgEnum("membership_status", [
+  "active",
+  "suspended",
+]);
+
+export const invitationStatusEnum = pgEnum("invitation_status", [
+  "pending",
+  "accepted",
+  "revoked",
+  "expired",
 ]);
 
 export const workspaces = pgTable(
@@ -73,6 +86,84 @@ export const userRoles = pgTable(
       .references(() => roles.id, { onDelete: "cascade" }),
   },
   (table) => [primaryKey({ columns: [table.userId, table.roleId] })],
+);
+
+export const workspaceMemberships = pgTable(
+  "workspace_memberships",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: roleNameEnum("role").notNull(),
+    status: membershipStatusEnum("status").default("active").notNull(),
+    createdById: uuid("created_by_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("workspace_memberships_workspace_user_idx").on(
+      table.workspaceId,
+      table.userId,
+    ),
+    index("workspace_memberships_user_status_idx").on(
+      table.userId,
+      table.status,
+    ),
+    index("workspace_memberships_workspace_role_idx").on(
+      table.workspaceId,
+      table.role,
+      table.status,
+    ),
+  ],
+);
+
+export const workspaceInvitations = pgTable(
+  "workspace_invitations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id")
+      .notNull()
+      .references(() => workspaces.id, { onDelete: "cascade" }),
+    email: varchar("email", { length: 255 }).notNull(),
+    role: roleNameEnum("role").notNull(),
+    tokenHash: varchar("token_hash", { length: 128 }).notNull(),
+    invitedById: uuid("invited_by_id")
+      .notNull()
+      .references(() => users.id),
+    acceptedByUserId: uuid("accepted_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    status: invitationStatusEnum("status").default("pending").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  },
+  (table) => [
+    uniqueIndex("workspace_invitations_token_hash_idx").on(table.tokenHash),
+    uniqueIndex("workspace_invitations_pending_email_idx")
+      .on(table.workspaceId, table.email)
+      .where(sql`${table.status} = 'pending'`),
+    index("workspace_invitations_workspace_status_idx").on(
+      table.workspaceId,
+      table.status,
+      table.expiresAt,
+    ),
+  ],
 );
 
 export const demoSessions = pgTable("demo_sessions", {

@@ -42,7 +42,7 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       { href: "/leads", label: "Leads", icon: Sparkles },
       { href: "/deals", label: "Deals", icon: CircleDollarSign },
-      { href: "/brands", label: "Brands", icon: Building2 },
+      { href: "/companies", label: "Companies", icon: Building2 },
       { href: "/wiki", label: "Wiki", icon: BookOpen },
     ],
   },

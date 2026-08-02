@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getDb } from "@/db/client";
-import { activities, brands, deals, leads, users } from "@/db/schema";
+import { activities, companies, deals, leads, users } from "@/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
   const db = getDb();
   const [leadResult, brandResult, dealResult, wonResult, stageRows, recentActivities] = await Promise.all([
     db.select({ count: sql<number>`count(*)::int` }).from(leads).where(isNull(leads.deletedAt)),
-    db.select({ count: sql<number>`count(*)::int` }).from(brands).where(isNull(brands.deletedAt)),
+    db.select({ count: sql<number>`count(*)::int` }).from(companies).where(isNull(companies.deletedAt)),
     db.select({ count: sql<number>`count(*)::int`, value: sql<string>`coalesce(sum(${deals.value}), 0)` }).from(deals).where(isNull(deals.deletedAt)),
     db.select({ count: sql<number>`count(*)::int`, value: sql<string>`coalesce(sum(${deals.value}), 0)` }).from(deals).where(eq(deals.stage, "won")),
     db.select({ stage: deals.stage, count: sql<number>`count(*)::int`, value: sql<string>`coalesce(sum(${deals.value}), 0)` }).from(deals).where(isNull(deals.deletedAt)).groupBy(deals.stage),
@@ -61,7 +61,7 @@ export default async function DashboardPage() {
         <StatCard label="Active pipeline" value={money(pipelineValue)} detail={`${dealResult[0]?.count ?? 0} deals in motion`} icon={CircleDollarSign} />
         <StatCard label="Won revenue" value={money(wonValue)} detail={`${wonResult[0]?.count ?? 0} deals closed`} icon={TrendingUp} tone="emerald" />
         <StatCard label="Total leads" value={String(leadResult[0]?.count ?? 0)} detail="31 converted this quarter" icon={Sparkles} tone="violet" />
-        <StatCard label="Active brands" value={String(brandResult[0]?.count ?? 0)} detail="Across 8 industries" icon={Building2} tone="amber" />
+        <StatCard label="Active companies" value={String(brandResult[0]?.count ?? 0)} detail="Across 8 industries" icon={Building2} tone="amber" />
       </div>
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[1.45fr_1fr]">

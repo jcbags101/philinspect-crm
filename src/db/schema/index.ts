@@ -3,4 +3,5 @@ export * from "./crm";
 export * from "./engagement";
 export * from "./identity";
 export * from "./inbox";
+export * from "./inspections";
 export * from "./system";

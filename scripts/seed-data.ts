@@ -7,7 +7,7 @@ import {
   auditLogs,
   billingMilestones,
   billingPlans,
-  brands,
+  companies,
   catalogItems,
   communicationChannels,
   conversationTagLinks,
@@ -26,6 +26,7 @@ import {
   partnershipAccounts,
   partnershipGroupMembers,
   partnershipGroups,
+  pipelineStages,
   proposals,
   proposalVersions,
   recordings,
@@ -35,6 +36,7 @@ import {
   userRoles,
   users,
   workspaces,
+  workspaceMemberships,
 } from "../src/db/schema";
 
 config({ path: ".env.local" });
@@ -135,12 +137,18 @@ export async function seedDemoData(): Promise<void> {
         attachments,
         notes,
         activities,
+        tasks,
+        inspections,
         deal_stage_history,
         deals,
-        brands,
+        pipeline_stages,
+        contacts,
+        companies,
         leads,
         integration_connections,
         demo_sessions,
+        workspace_invitations,
+        workspace_memberships,
         user_roles,
         roles,
         users,
@@ -182,16 +190,34 @@ export async function seedDemoData(): Promise<void> {
         roleId: roleRows[index === 11 ? 2 : index >= 8 ? 1 : 0].id!,
       })),
     );
+    await db.insert(workspaceMemberships).values(
+      userRows.map((user, index) => ({
+        id: id(36, index + 1),
+        workspaceId: workspaceRow.id!,
+        userId: user.id!,
+        role:
+          index === 11
+            ? ("admin" as const)
+            : index >= 8
+              ? ("sales" as const)
+              : ("account_manager" as const),
+        status: "active" as const,
+        createdById: userRows[11].id!,
+        createdAt: daysAgo(90 - index),
+        updatedAt: daysAgo(index % 7),
+      })),
+    );
     await db.insert(demoSessions).values({
       id: id(3, 1),
       activeUserId: userRows[0].id!,
       expiresAt: new Date("2030-01-01T00:00:00.000Z"),
     });
 
-    const brandRows: (typeof brands.$inferInsert)[] = Array.from(
+    const brandRows: (typeof companies.$inferInsert)[] = Array.from(
       { length: 148 },
       (_, index) => ({
         id: id(10, index + 1),
+        workspaceId: workspaceRow.id!,
         name: `${["Northstar", "Harbor", "Cedar", "Orbit", "Summit", "Lumen", "Atlas", "River"][index % 8]} ${["Labs", "Foods", "Capital", "Health", "Works", "Group"][index % 6]} ${String(index + 1).padStart(3, "0")}`,
         domain: index % 3 === 0 ? `demo-brand-${index + 1}.example` : null,
         industry: industries[index % industries.length],
@@ -201,12 +227,13 @@ export async function seedDemoData(): Promise<void> {
         updatedAt: daysAgo(index % 20),
       }),
     );
-    await db.insert(brands).values(brandRows);
+    await db.insert(companies).values(brandRows);
 
     const leadRows: (typeof leads.$inferInsert)[] = Array.from(
       { length: 400 },
       (_, index) => ({
         id: id(11, index + 1),
+        workspaceId: workspaceRow.id!,
         name: `${firstNames[index % firstNames.length]} ${lastNames[(index + 3) % lastNames.length]} ${index + 1}`,
         companyName: `Prospect Studio ${String(index + 1).padStart(3, "0")}`,
         email: `prospect${index + 1}@example.test`,
@@ -241,6 +268,7 @@ export async function seedDemoData(): Promise<void> {
       ["Lumen Security", "reseller", "https://lumen.example"],
     ].map(([name, kind, landingPage], index) => ({
       id: id(12, index + 1),
+      workspaceId: workspaceRow.id!,
       name: name as string,
       kind: kind as "product" | "service" | "reseller",
       landingPage: landingPage as string | null,
@@ -249,6 +277,22 @@ export async function seedDemoData(): Promise<void> {
     }));
     await db.insert(catalogItems).values(catalogRows);
 
+    const pipelineStageRows: (typeof pipelineStages.$inferInsert)[] = stages.map(
+      (key, index) => ({
+        id: id(37, index + 1),
+        workspaceId: workspaceRow.id!,
+        key,
+        label: key
+          .split("_")
+          .map((part) => part[0].toUpperCase() + part.slice(1))
+          .join(" "),
+        position: index,
+        colorRole: `pipeline-${key}`,
+        outcome: key === "won" ? "won" : key === "lost" ? "lost" : "open",
+      }),
+    );
+    await db.insert(pipelineStages).values(pipelineStageRows);
+
     const dealRows: (typeof deals.$inferInsert)[] = Array.from(
       { length: 163 },
       (_, index) => {
@@ -256,10 +300,12 @@ export async function seedDemoData(): Promise<void> {
         const kind = index < 16 ? "product" : index < 137 ? "service" : "reseller";
         return {
           id: id(13, index + 1),
+          workspaceId: workspaceRow.id!,
           title: `${brandRows[index % brandRows.length].name} — ${catalogRows[index % catalogRows.length].name}`,
-          brandId: brandRows[index % brandRows.length].id!,
+          companyId: brandRows[index % brandRows.length].id!,
           sourceLeadId: index < 31 ? leadRows[index].id! : null,
           ownerId: userRows[index % 8].id!,
+          pipelineStageId: pipelineStageRows[index % pipelineStageRows.length].id!,
           stage,
           kind,
           value: stage === "lost" ? null : String(75_000 + (index % 24) * 125_000),
@@ -275,7 +321,9 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(dealStageHistory).values(
       dealRows.map((deal, index) => ({
         id: id(14, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: deal.id!,
+        toPipelineStageId: deal.pipelineStageId,
         fromStage: null,
         toStage: deal.stage!,
         actorId: deal.ownerId!,
@@ -286,8 +334,9 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(activities).values(
       Array.from({ length: 180 }, (_, index) => ({
         id: id(15, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index % dealRows.length].id!,
-        brandId: dealRows[index % dealRows.length].brandId,
+        companyId: dealRows[index % dealRows.length].companyId,
         actorId: userRows[index % 8].id!,
         type: ["call", "email", "meeting", "note", "system"][index % 5] as
           | "call"
@@ -303,8 +352,9 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(notes).values(
       Array.from({ length: 60 }, (_, index) => ({
         id: id(16, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index % dealRows.length].id!,
-        brandId: dealRows[index % dealRows.length].brandId,
+        companyId: dealRows[index % dealRows.length].companyId,
         authorId: userRows[index % 8].id!,
         body: `Demo note ${index + 1}: follow up on the fictional stakeholder requirements.`,
         createdAt: daysAgo(index % 30),
@@ -361,7 +411,7 @@ export async function seedDemoData(): Promise<void> {
           messagingAccountId: account.id!,
           providerConversationId: `fixture-${channel}-conversation-${String(index + 1).padStart(3, "0")}`,
           channelId: inboxChannels[channel].id!,
-          brandId: brandRows[index % brandRows.length].id!,
+          companyId: brandRows[index % brandRows.length].id!,
           assigneeId: index % 5 === 0 ? null : userRows[index % 8].id!,
           subject: ["Product inspection", "Demo request", "Pricing question", "Follow-up"][index % 4],
           participantLabel: `Fictional customer ${String(index + 1).padStart(2, "0")}`,
@@ -455,6 +505,7 @@ export async function seedDemoData(): Promise<void> {
       { length: 18 },
       (_, index) => ({
         id: id(23, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index].id!,
         ownerId: userRows[index % 8].id!,
         title: `Discovery session ${index + 1}`,
@@ -470,6 +521,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(recordings).values(
       meetingRows.slice(0, 8).map((meeting, index) => ({
         id: id(24, index + 1),
+        workspaceId: workspaceRow.id!,
         meetingId: meeting.id!,
         durationSeconds: String(900 + index * 120),
         transcript: "This is a simulated meeting transcript.",
@@ -481,8 +533,9 @@ export async function seedDemoData(): Promise<void> {
       { length: 24 },
       (_, index) => ({
         id: id(25, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index].id!,
-        brandId: dealRows[index].brandId,
+        companyId: dealRows[index].companyId,
         ownerId: userRows[index % 8].id!,
         title: `Proposal ${String(index + 1).padStart(3, "0")}`,
         type: index % 2 === 0 ? "presentation" : "formal",
@@ -498,6 +551,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(proposalVersions).values(
       proposalRows.map((proposal, index) => ({
         id: id(26, index + 1),
+        workspaceId: workspaceRow.id!,
         proposalId: proposal.id!,
         version: "v1",
         fixture: { simulated: true, pages: 12 + (index % 8) },
@@ -507,6 +561,7 @@ export async function seedDemoData(): Promise<void> {
     const partnershipRows: (typeof partnershipAccounts.$inferInsert)[] =
       Array.from({ length: 12 }, (_, index) => ({
         id: id(27, index + 1),
+        workspaceId: workspaceRow.id!,
         name: `Demo Partner ${index + 1}`,
         status: index % 3 === 0 ? "pending" : "approved",
       }));
@@ -515,6 +570,7 @@ export async function seedDemoData(): Promise<void> {
       { length: 3 },
       (_, index) => ({
         id: id(28, index + 1),
+        workspaceId: workspaceRow.id!,
         name: ["Regional Partners", "Delivery Network", "Technology Alliance"][
           index
         ],
@@ -525,6 +581,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(partnershipGroupMembers).values(
       partnershipRows.map((account, index) => ({
         id: id(29, index + 1),
+        workspaceId: workspaceRow.id!,
         groupId: groupRows[index % groupRows.length].id!,
         accountId: account.id!,
       })),
@@ -533,6 +590,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(revenueTargets).values(
       Array.from({ length: 12 }, (_, index) => ({
         id: id(30, index + 1),
+        workspaceId: workspaceRow.id!,
         year: 2026,
         month: index + 1,
         amount: "22000000.00",
@@ -543,6 +601,7 @@ export async function seedDemoData(): Promise<void> {
       { length: 96 },
       (_, index) => ({
         id: id(31, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index % dealRows.length].id!,
         catalogItemId: catalogRows[index % catalogRows.length].id!,
         month: `2026-${String((index % 8) + 5).padStart(2, "0")}-01`,
@@ -557,8 +616,9 @@ export async function seedDemoData(): Promise<void> {
       { length: 3 },
       (_, index) => ({
         id: id(32, index + 1),
+        workspaceId: workspaceRow.id!,
         dealId: dealRows[index + 10].id!,
-        brandId: dealRows[index + 10].brandId,
+        companyId: dealRows[index + 10].companyId,
         type: index === 0 ? "milestone" : "monthly",
         totalValue: String([9000, 15000, 50000][index]),
         monthlyValue: index === 0 ? null : String([0, 15000, 50000][index]),
@@ -571,6 +631,7 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(billingMilestones).values(
       Array.from({ length: 3 }, (_, index) => ({
         id: id(33, index + 1),
+        workspaceId: workspaceRow.id!,
         billingPlanId: billingRows[0].id!,
         label: ["Kickoff", "Design approval", "Launch"][index],
         amount: "3000.00",
@@ -581,12 +642,14 @@ export async function seedDemoData(): Promise<void> {
     await db.insert(integrationConnections).values([
       {
         id: id(34, 1),
+        workspaceId: workspaceRow.id!,
         provider: "google",
         status: "disconnected",
         fixture: { simulated: true },
       },
       ...["viber", "whatsapp", "messenger"].map((provider, index) => ({
         id: id(34, index + 2),
+        workspaceId: workspaceRow.id!,
         provider,
         status: "coming_soon" as const,
         fixture: { simulated: true },

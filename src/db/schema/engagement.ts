@@ -8,8 +8,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { brands, deals } from "./crm";
-import { users } from "./identity";
+import { companies, deals } from "./crm";
+import { users, workspaces } from "./identity";
 
 export const meetingStatusEnum = pgEnum("meeting_status", [
   "pending",
@@ -32,6 +32,7 @@ export const partnershipStatusEnum = pgEnum("partnership_status", [
 
 export const meetings = pgTable("meetings", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   dealId: uuid("deal_id").references(() => deals.id),
   ownerId: uuid("owner_id")
     .notNull()
@@ -47,6 +48,7 @@ export const meetings = pgTable("meetings", {
 
 export const recordings = pgTable("recordings", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   meetingId: uuid("meeting_id")
     .notNull()
     .references(() => meetings.id, { onDelete: "cascade" }),
@@ -60,12 +62,13 @@ export const recordings = pgTable("recordings", {
 
 export const proposals = pgTable("proposals", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   dealId: uuid("deal_id")
     .notNull()
     .references(() => deals.id),
-  brandId: uuid("brand_id")
+  companyId: uuid("company_id")
     .notNull()
-    .references(() => brands.id),
+    .references(() => companies.id),
   ownerId: uuid("owner_id")
     .notNull()
     .references(() => users.id),
@@ -82,6 +85,7 @@ export const proposals = pgTable("proposals", {
 
 export const proposalVersions = pgTable("proposal_versions", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   proposalId: uuid("proposal_id")
     .notNull()
     .references(() => proposals.id, { onDelete: "cascade" }),
@@ -94,6 +98,7 @@ export const proposalVersions = pgTable("proposal_versions", {
 
 export const partnershipAccounts = pgTable("partnership_accounts", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 180 }).notNull(),
   status: partnershipStatusEnum("status").default("pending").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -103,6 +108,7 @@ export const partnershipAccounts = pgTable("partnership_accounts", {
 
 export const partnershipGroups = pgTable("partnership_groups", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 180 }).notNull(),
   createdById: uuid("created_by_id")
     .notNull()
@@ -114,6 +120,7 @@ export const partnershipGroups = pgTable("partnership_groups", {
 
 export const partnershipGroupMembers = pgTable("partnership_group_members", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   groupId: uuid("group_id")
     .notNull()
     .references(() => partnershipGroups.id, { onDelete: "cascade" }),

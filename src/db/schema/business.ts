@@ -11,7 +11,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { brands, dealKindEnum, deals } from "./crm";
+import { companies, dealKindEnum, deals } from "./crm";
+import { workspaces } from "./identity";
 
 export const billingTypeEnum = pgEnum("billing_type", [
   "monthly",
@@ -20,6 +21,7 @@ export const billingTypeEnum = pgEnum("billing_type", [
 
 export const catalogItems = pgTable("catalog_items", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 180 }).notNull(),
   kind: dealKindEnum("kind").notNull(),
   landingPage: varchar("landing_page", { length: 500 }),
@@ -35,6 +37,7 @@ export const catalogItems = pgTable("catalog_items", {
 
 export const revenueTargets = pgTable("revenue_targets", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   year: integer("year").notNull(),
   month: integer("month").notNull(),
   amount: numeric("amount", { precision: 14, scale: 2 }).notNull(),
@@ -45,6 +48,7 @@ export const revenueEntries = pgTable(
   "revenue_entries",
   {
     id: uuid("id").defaultRandom().primaryKey(),
+    workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
     dealId: uuid("deal_id")
       .notNull()
       .references(() => deals.id),
@@ -62,12 +66,13 @@ export const revenueEntries = pgTable(
 
 export const billingPlans = pgTable("billing_plans", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   dealId: uuid("deal_id")
     .notNull()
     .references(() => deals.id),
-  brandId: uuid("brand_id")
+  companyId: uuid("company_id")
     .notNull()
-    .references(() => brands.id),
+    .references(() => companies.id),
   type: billingTypeEnum("type").notNull(),
   totalValue: numeric("total_value", { precision: 14, scale: 2 }).notNull(),
   monthlyValue: numeric("monthly_value", { precision: 14, scale: 2 }),
@@ -85,6 +90,7 @@ export const billingPlans = pgTable("billing_plans", {
 
 export const billingMilestones = pgTable("billing_milestones", {
   id: uuid("id").defaultRandom().primaryKey(),
+  workspaceId: uuid("workspace_id").notNull().references(() => workspaces.id, { onDelete: "cascade" }),
   billingPlanId: uuid("billing_plan_id")
     .notNull()
     .references(() => billingPlans.id, { onDelete: "cascade" }),
@@ -93,4 +99,3 @@ export const billingMilestones = pgTable("billing_milestones", {
   dueOn: date("due_on"),
   paidAt: timestamp("paid_at", { withTimezone: true }),
 });
-

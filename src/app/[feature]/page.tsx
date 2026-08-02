@@ -7,7 +7,7 @@ import { DealBoard } from "@/components/deal-board";
 import { RecordsView, type RecordColumn, type RecordRow } from "@/components/records-view";
 import { getDb } from "@/db/client";
 import {
-  auditLogs, billingPlans, brands, catalogItems,
+  auditLogs, billingPlans, companies, catalogItems,
   deals, integrationConnections, leads, meetings, partnershipAccounts, proposals,
   revenueEntries, roles, userRoles, users,
 } from "@/db/schema";
@@ -18,7 +18,7 @@ type PageProps = { params: Promise<{ feature: string }> };
 type View = { title: string; description: string; noun: string; columns: RecordColumn[]; rows: RecordRow[]; compact?: boolean };
 
 const titles: Record<string, string> = {
-  chat: "CRM Copilot", leads: "Leads", deals: "Deals", brands: "Brands", wiki: "Wiki",
+  chat: "CRM Copilot", leads: "Leads", deals: "Deals", brands: "Companies", companies: "Companies", wiki: "Wiki",
   inbox: "Inbox", meetings: "Meetings", proposals: "Proposals", partnerships: "Partnerships",
   users: "Users", revenue: "Revenue", bills: "Bills", catalog: "Catalog", "audit-logs": "Audit logs", settings: "Settings",
 };
@@ -40,9 +40,9 @@ async function loadView(feature: string): Promise<View | null> {
     return { title: "Leads", description: "Capture, qualify, and convert potential customers.", noun: "lead", columns: [{ key: "name", label: "Contact" }, { key: "company", label: "Company" }, { key: "segment", label: "Segment", badge: true }, { key: "status", label: "Status", badge: true }, { key: "industry", label: "Industry" }, { key: "owner", label: "Owner" }, { key: "created", label: "Created" }], rows: rows.map((row) => ({ id: row.id, name: row.name, company: row.company, segment: label(row.segment), status: label(row.status), industry: row.industry, owner: row.owner, created: date(row.createdAt) })) };
   }
 
-  if (feature === "brands") {
-    const rows = await db.select({ id: brands.id, name: brands.name, domain: brands.domain, industry: brands.industry, owner: users.name, updatedAt: brands.updatedAt }).from(brands).leftJoin(users, eq(brands.ownerId, users.id)).where(isNull(brands.deletedAt)).orderBy(brands.name).limit(100);
-    return { title: "Brands", description: "A shared view of every customer and company relationship.", noun: "brand", columns: [{ key: "name", label: "Brand" }, { key: "domain", label: "Website" }, { key: "industry", label: "Industry", badge: true }, { key: "owner", label: "Account owner" }, { key: "updated", label: "Last updated" }], rows: rows.map((row) => ({ id: row.id, name: row.name, domain: row.domain, industry: row.industry, owner: row.owner, updated: date(row.updatedAt) })) };
+  if (feature === "brands" || feature === "companies") {
+    const rows = await db.select({ id: companies.id, name: companies.name, domain: companies.domain, industry: companies.industry, owner: users.name, updatedAt: companies.updatedAt }).from(companies).leftJoin(users, eq(companies.ownerId, users.id)).where(isNull(companies.deletedAt)).orderBy(companies.name).limit(100);
+    return { title: "Companies", description: "A shared view of every customer organization and relationship.", noun: "company", columns: [{ key: "name", label: "Company" }, { key: "domain", label: "Website" }, { key: "industry", label: "Industry", badge: true }, { key: "owner", label: "Account owner" }, { key: "updated", label: "Last updated" }], rows: rows.map((row) => ({ id: row.id, name: row.name, domain: row.domain, industry: row.industry, owner: row.owner, updated: date(row.updatedAt) })) };
   }
 
   if (feature === "meetings") {
@@ -51,7 +51,7 @@ async function loadView(feature: string): Promise<View | null> {
   }
 
   if (feature === "proposals") {
-    const rows = await db.select({ id: proposals.id, title: proposals.title, type: proposals.type, status: proposals.status, brand: brands.name, owner: users.name, updatedAt: proposals.updatedAt }).from(proposals).innerJoin(brands, eq(proposals.brandId, brands.id)).innerJoin(users, eq(proposals.ownerId, users.id)).orderBy(desc(proposals.updatedAt));
+    const rows = await db.select({ id: proposals.id, title: proposals.title, type: proposals.type, status: proposals.status, brand: companies.name, owner: users.name, updatedAt: proposals.updatedAt }).from(proposals).innerJoin(companies, eq(proposals.companyId, companies.id)).innerJoin(users, eq(proposals.ownerId, users.id)).orderBy(desc(proposals.updatedAt));
     return { title: "Proposals", description: "Build, version, send, and track customer proposals.", noun: "proposal", columns: [{ key: "title", label: "Proposal" }, { key: "brand", label: "Brand" }, { key: "type", label: "Format", badge: true }, { key: "status", label: "Status", badge: true }, { key: "owner", label: "Owner" }, { key: "updated", label: "Updated" }], rows: rows.map((row) => ({ id: row.id, title: row.title, brand: row.brand, type: label(row.type), status: label(row.status), owner: row.owner, updated: date(row.updatedAt) })) };
   }
 
@@ -71,7 +71,7 @@ async function loadView(feature: string): Promise<View | null> {
   }
 
   if (feature === "bills") {
-    const rows = await db.select({ id: billingPlans.id, deal: deals.title, brand: brands.name, type: billingPlans.type, totalValue: billingPlans.totalValue, monthlyValue: billingPlans.monthlyValue, currency: billingPlans.currency, startsOn: billingPlans.startsOn }).from(billingPlans).innerJoin(deals, eq(billingPlans.dealId, deals.id)).innerJoin(brands, eq(billingPlans.brandId, brands.id)).where(isNull(billingPlans.deletedAt)).orderBy(desc(billingPlans.createdAt));
+    const rows = await db.select({ id: billingPlans.id, deal: deals.title, brand: companies.name, type: billingPlans.type, totalValue: billingPlans.totalValue, monthlyValue: billingPlans.monthlyValue, currency: billingPlans.currency, startsOn: billingPlans.startsOn }).from(billingPlans).innerJoin(deals, eq(billingPlans.dealId, deals.id)).innerJoin(companies, eq(billingPlans.companyId, companies.id)).where(isNull(billingPlans.deletedAt)).orderBy(desc(billingPlans.createdAt));
     return { title: "Bills", description: "Plan monthly and milestone billing for won work.", noun: "billing plan", columns: [{ key: "brand", label: "Brand" }, { key: "deal", label: "Deal" }, { key: "type", label: "Billing", badge: true }, { key: "starts", label: "Starts" }, { key: "monthly", label: "Monthly", align: "right" }, { key: "total", label: "Total", align: "right" }], rows: rows.map((row) => ({ id: row.id, brand: row.brand, deal: row.deal, type: label(row.type), starts: date(row.startsOn), monthly: money(row.monthlyValue, row.currency), total: money(row.totalValue, row.currency) })) };
   }
 
@@ -107,7 +107,7 @@ export default async function FeaturePage({ params }: PageProps) {
   if (feature === "chat") return <ChatDemo />;
   if (feature === "deals") {
     const db = getDb();
-    const rows = await db.select({ id: deals.id, title: deals.title, stage: deals.stage, kind: deals.kind, value: deals.value, brand: brands.name, owner: users.name }).from(deals).innerJoin(brands, eq(deals.brandId, brands.id)).innerJoin(users, eq(deals.ownerId, users.id)).where(isNull(deals.deletedAt)).orderBy(desc(deals.updatedAt));
+    const rows = await db.select({ id: deals.id, title: deals.title, stage: deals.stage, kind: deals.kind, value: deals.value, brand: companies.name, owner: users.name }).from(deals).innerJoin(companies, eq(deals.companyId, companies.id)).innerJoin(users, eq(deals.ownerId, users.id)).where(isNull(deals.deletedAt)).orderBy(desc(deals.updatedAt));
     return <DealBoard deals={rows.map((row) => ({ ...row, value: Number(row.value ?? 0) }))} />;
   }
   const view = await loadView(feature);

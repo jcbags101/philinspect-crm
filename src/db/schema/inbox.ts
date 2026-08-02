@@ -12,7 +12,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { brands } from "./crm";
+import { companies } from "./crm";
 import { users, workspaces } from "./identity";
 
 export const channelTypeEnum = pgEnum("channel_type", [
@@ -76,7 +76,7 @@ export const conversations = pgTable(
     messagingAccountId: uuid("messaging_account_id").notNull().references(() => messagingAccounts.id, { onDelete: "cascade" }),
     providerConversationId: varchar("provider_conversation_id", { length: 180 }).notNull(),
     channelId: uuid("channel_id").notNull().references(() => communicationChannels.id),
-    brandId: uuid("brand_id").references(() => brands.id),
+    companyId: uuid("company_id").references(() => companies.id),
     assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
     subject: varchar("subject", { length: 240 }).notNull(),
     participantLabel: varchar("participant_label", { length: 180 }).notNull(),

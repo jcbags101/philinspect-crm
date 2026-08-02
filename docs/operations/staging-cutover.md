@@ -185,3 +185,19 @@ inspection workflows, and full Figma visual coverage.
 
 The browser verification used an isolated Playwright context and did not sign
 out or alter the owner's existing authenticated browser session.
+
+### MVP migration rehearsal
+
+- Isolated Neon test branch: `br-cold-surf-az7qnz7c` (`test`)
+- Parent: reserved `production` branch; the test branch contains no production
+  application data.
+- The test branch was reset to its parent before the final rehearsal.
+- Migrations `0000` through `0004` applied successfully from scratch.
+- The tenant schema suite passed 2 files and 9 tests.
+- The updated deterministic fictional seed completed successfully.
+- The read-only verifier confirmed 29 tenant tables, complete deal-stage
+  coverage, active membership coverage, and initial-admin preservation.
+
+The staging database has not received migration `0004` at this point. Its
+pre-MVP rollback counts above remain the authoritative staging baseline until a
+separate staging migration step is recorded.
