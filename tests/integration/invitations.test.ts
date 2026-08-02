@@ -9,6 +9,7 @@ import {
   acceptWorkspaceInvitation,
   createWorkspaceInvitation,
   hashInvitationToken,
+  revokeInvitation,
 } from "../../src/server/services/invitation-service";
 import {
   applyIntegrationMigrations,
@@ -175,5 +176,31 @@ describe("workspace invitations", () => {
         database,
       ),
     ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("rejects an invitation for an existing member", async () => {
+    await expect(
+      createWorkspaceInvitation(
+        adminContext,
+        { email: "ADMIN@EXAMPLE.TEST", role: "sales" },
+        database,
+      ),
+    ).rejects.toBeInstanceOf(ConflictError);
+  });
+
+  it("revokes a scoped pending invitation and records the event", async () => {
+    const invitation = await createWorkspaceInvitation(
+      adminContext,
+      { email: "revoke@example.test", role: "sales" },
+      database,
+    );
+    await revokeInvitation(adminContext, invitation.id, database);
+    const result = await pool.query<{ status: string; revoked: number }>(
+      `select status::text,
+              (select count(*)::int from audit_logs where entity_id = $1 and action = 'revoked') as revoked
+         from workspace_invitations where id = $1`,
+      [invitation.id],
+    );
+    expect(result.rows[0]).toEqual({ status: "revoked", revoked: 1 });
   });
 });

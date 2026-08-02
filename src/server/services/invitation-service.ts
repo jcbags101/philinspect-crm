@@ -7,6 +7,7 @@ import {
   revokePendingInvitationByEmail,
   revokeWorkspaceInvitation,
 } from "@/db/repositories/invitation-repository";
+import { findWorkspaceMemberByEmail } from "@/db/repositories/member-repository";
 import {
   createOrLinkWorkspaceMember,
   type Database,
@@ -55,6 +56,15 @@ export async function createWorkspaceInvitation(
   const expiresAt = new Date(Date.now() + INVITATION_TTL_MS);
 
   const invitation = await database.transaction(async (transaction) => {
+    if (
+      await findWorkspaceMemberByEmail(
+        transaction,
+        context.workspaceId,
+        input.email,
+      )
+    ) {
+      throw new ConflictError("This person is already a workspace member.");
+    }
     await revokePendingInvitationByEmail(
       transaction,
       context.workspaceId,
@@ -153,13 +163,23 @@ export async function revokeInvitation(
   database: Database = getDb(),
 ): Promise<void> {
   assertPermission(context.role, "invitations:manage");
-  if (
-    !(await revokeWorkspaceInvitation(
-      database,
-      context.workspaceId,
-      invitationId,
-    ))
-  ) {
-    throw new NotFoundError("The invitation could not be found.");
-  }
+  await database.transaction(async (transaction) => {
+    if (
+      !(await revokeWorkspaceInvitation(
+        transaction,
+        context.workspaceId,
+        invitationId,
+      ))
+    ) {
+      throw new NotFoundError("The invitation could not be found.");
+    }
+    await writeAuditEvent(transaction, {
+      workspaceId: context.workspaceId,
+      actorId: context.userId,
+      entityType: "workspace_invitation",
+      entityId: invitationId,
+      action: "revoked",
+      label: "Revoked a workspace invitation",
+    });
+  });
 }
