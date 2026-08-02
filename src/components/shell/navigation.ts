@@ -16,6 +16,7 @@ import {
   Sparkles,
   Tags,
   UsersRound,
+  ContactRound,
 } from "lucide-react";
 
 export interface NavigationItem {
@@ -43,6 +44,7 @@ export const navigationGroups: NavigationGroup[] = [
       { href: "/leads", label: "Leads", icon: Sparkles },
       { href: "/deals", label: "Deals", icon: CircleDollarSign },
       { href: "/companies", label: "Companies", icon: Building2 },
+      { href: "/contacts", label: "Contacts", icon: ContactRound },
       { href: "/wiki", label: "Wiki", icon: BookOpen },
     ],
   },
