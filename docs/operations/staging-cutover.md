@@ -114,3 +114,74 @@ The application fix release initially used an authenticated Vercel CLI fallback
 because its Git webhook was delayed. The following documentation push produced
 a READY Git-sourced deployment from GitHub `staging`, confirming that the
 integration recovered and still uses `productionBranch: staging`.
+
+## 2026-08-02 pre-MVP implementation baseline
+
+This section freezes the state immediately before the tenant-safe CRM MVP work.
+It supplements the original cutover record; it does not replace or broaden the
+staging-only guardrails above.
+
+### Source and deployment
+
+- Local branch: `staging`
+- Published baseline: `origin/staging` at `a2503a7` (`Fix infinite signup loading`)
+- Local approved design commit: `69d9917`
+- Local approved implementation-plan commit: `a051db9`
+- Git remote: private `jcbags101/philinspect-crm`
+- Vercel project: `prj_TA6Km0gpwns0e44xhubAM3ARNG1a`
+- Stable staging alias: `crm-symph-poc.vercel.app`
+- Drizzle journal: migrations `0000` through `0003`
+
+No production project or deployment was created. No branch was pushed during
+this baseline audit.
+
+### Database snapshot
+
+The connected runtime database was inspected with read-only queries. It reported
+database `neondb`, schema `public`, one workspace, and the existing fictional
+demo data. Material CRM counts were:
+
+| Table | Rows |
+| --- | ---: |
+| workspaces | 1 |
+| users | 53 |
+| roles | 3 |
+| user_roles | 53 |
+| leads | 400 |
+| deals | 163 |
+| deal_stage_history | 163 |
+| brands | 148 |
+| activities | 180 |
+| audit_logs | 1,917 |
+| conversations | 24 |
+| messages | 201 |
+
+This is a count-only rollback reference. No row contents, authentication data,
+connection strings, tokens, or secrets were recorded. Existing migrations do
+not yet provide the membership, invitation, company, contact, task, and fully
+workspace-scoped CRM model required by the approved MVP.
+
+### Verification result
+
+The clean pre-MVP baseline passed on 2026-08-02:
+
+```text
+npm run check
+  lint: passed
+  typecheck: passed
+  unit tests: 3 files, 7 tests passed
+  Next.js 16.2.10 production build: passed
+
+npm run test:e2e
+  Chromium: 5 tests passed (43.4s)
+```
+
+Current route output is limited to the generic overview/dynamic feature pages,
+authentication, design-system gallery, and mock unified inbox. The primary known
+gaps are tenant-scoped memberships/invitations, removal of the demo-session
+fallback, centralized RBAC, scoped repositories, Contacts/Companies/Tasks,
+functional CRM CRUD, lead conversion, persistent deal-stage movement,
+inspection workflows, and full Figma visual coverage.
+
+The browser verification used an isolated Playwright context and did not sign
+out or alter the owner's existing authenticated browser session.

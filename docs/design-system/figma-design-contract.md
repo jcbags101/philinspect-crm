@@ -6,6 +6,8 @@ Source: `Philinspect CRM` Figma file, read-only.
 - Foundations node: `50:1184`
 - Implementation target: Next.js 16, React 19, Tailwind CSS 4, Base UI
 - Figma remains read-only. All changes are made in this repository.
+- Authoritative screen/route/state inventory:
+  [`figma-screen-matrix.md`](./figma-screen-matrix.md)
 
 ## Source hierarchy
 
@@ -14,7 +16,10 @@ Source: `Philinspect CRM` Figma file, read-only.
 3. `03 - Molecules`
 4. `04 - Organisms`
 5. `05 - Templates`
-6. `06 - Pages`
+6. `06 PhilInspect Pages`
+
+The separate `06 Trussfolio Pages` and `Direction` pages are outside the
+PhilInspect CRM implementation scope.
 
 When values conflict, named Figma variables/styles override screenshots, and
 component definitions override page-local approximations.
@@ -131,6 +136,8 @@ All extracted text styles use zero letter spacing.
 ## Verification
 
 - Render every component/variant on `/design-system`.
+- Implement and verify every row in `figma-screen-matrix.md`; a generic dynamic
+  table page does not count as a matched product screen.
 - Compare fixed-size screenshots with the relevant Figma frames.
 - Verify at `1440x1000`, `1024x768`, `768x1024`, `390x844`, and `360x800`.
 - Run lint, typecheck, unit tests, production build, and Playwright tests before
