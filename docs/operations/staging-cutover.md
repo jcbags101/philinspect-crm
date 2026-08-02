@@ -198,6 +198,13 @@ out or alter the owner's existing authenticated browser session.
 - The read-only verifier confirmed 29 tenant tables, complete deal-stage
   coverage, active membership coverage, and initial-admin preservation.
 
-The staging database has not received migration `0004` at this point. Its
-pre-MVP rollback counts above remain the authoritative staging baseline until a
-separate staging migration step is recorded.
+Migration `0004_flimsy_rafael_vega` was subsequently applied successfully to
+the PhilInspectCRM Neon `staging` branch. The post-migration verifier passed all
+29 tenant tables, deal-stage coverage, membership coverage, and initial-admin
+preservation. Count checks confirmed that the data-preserving rename/backfill
+retained 148 Companies (formerly Brands), 400 Leads, and 163 Deals, while
+creating 53 active membership records, 8 workspace pipeline stages, and
+retaining 2 active administrators.
+
+No seed/reset was run against staging during this migration. The deterministic
+seed and reset validation ran only against the isolated `test` branch.
